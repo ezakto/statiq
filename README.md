@@ -15,7 +15,7 @@ Make template, source and distribution folders:
     $ mkdir src
     $ mkdir dst
 
-Then a statiq.json file:
+Then a `statiq.json` file:
 
     $ nano statiq.json
     
@@ -26,7 +26,7 @@ Then a statiq.json file:
         "outputRoot": "dst/"
     }
 
-Build a directory structure in src folder, with Markdown-formatted pages, like
+Build a directory structure in src folder, with markdown-formatted pages, like
 
     src/index.md
     src/about.md
@@ -72,6 +72,7 @@ You can set local variables in each source file, by placing a json object in its
     {
       "title": "Index page"
     };
+    
     Welcome!
     ========
     ...
@@ -112,7 +113,7 @@ Consider a multicolumn layout like this:
     </body>
     </html>
 
-Instead of using the `document` variable (which contains all the .md file), you can declare sections like this:
+Instead of using the `document` variable (which contains the full .md file), you can declare sections just like this:
 
     {
       "title": "Multi column",
@@ -134,12 +135,12 @@ Instead of using the `document` variable (which contains all the .md file), you 
 
 This is a [Heredoc](http://en.wikipedia.org/wiki/Here_document)-ish declaration.
 Sections start in a newline with `<<` followed by the section name, and another newline.
-Then, you close the section with a newline followed by the section name a semicolon, and a newline again.
-Section names are be case-sensitive alphanumeric strings.
+Then, you close the section with a newline followed by the section name, a semicolon, and a newline again.
+Section names must be case-sensitive alphanumeric strings.
 
 ### Global variables
 
-Use the "globals" attribute of the statiq.json object:
+Use the "globals" attribute of the `statiq.json` object:
 
     {
       ...
@@ -158,8 +159,29 @@ Those variables will be available across the site:
     <body>
     ...
 
+### Directory indexes
 
-#### That's all
+You can iterate files in a given folder with the special `list_*` variables.
+Given this structure:
 
-First time doing stuff like this, don't hate me :)
+    src/index.md
+    src/articles/myarticle.md
+    src/articles/myarticle2.md
+    src/articles/myarticle3.md
+
+You can list the articles folder in your templates with the `list_articles` variable:
+
+    <h4>Articles:</h4>
+    <ul>
+    {{#list_articles}}
+        <li><a href="{{url}}">{{title}}</a></li>
+    {{/list_articles}}
+    </ul>
+
+Each item in a `list_*` variable has access to local variables of that file,
+plus an `url` variable that points to the file path relative to the current file. This is great for link indexes.
+
+### That's all
+
+First time doing node stuff, don't hate me :)
 
