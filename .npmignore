@@ -1,2 +1,8 @@
 *~
+
+.npmignore
+.gitignore
+
 statiq.json
+
+test/
