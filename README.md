@@ -3,6 +3,11 @@ statiq
 
 A node.js static website generator
 
+Statiq reads a folder structure of input files and generates a replicated structure with web-ready files.
+
+It uses [Mustache](http://mustache.github.com) templates parsed with [Mu2](http://github.com/raycmorgan/Mu),
+and [Markdown](http://en.wikipedia.org/wiki/Markdown) language for content documents, parsed thanks to [Marked](http://github.com/chjj/marked).
+
 ### Install:
 
     npm install -g statiq
