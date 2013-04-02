@@ -1,0 +1,24 @@
+#!/usr/bin/env node
+
+var fs   = require('fs'),
+    path = require('path');
+
+var config,
+    statiqpath = process.cwd();
+
+// Look up for statiq.json file
+while (!config && statiqpath != '/') {
+    var statiqjson = path.join(statiqpath, 'statiq.json');
+    if (fs.existsSync(statiqjson)) {
+        config = require(statiqjson);
+    }
+    else {
+        statiqpath = path.dirname(statiqpath);
+    }
+}
+
+config.root = statiqpath;
+
+// Let's go
+require('../lib/statiq.js').load(config).process();
+

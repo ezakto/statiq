@@ -1,0 +1,22 @@
+{
+  "name": "statiq",
+  "version": "0.0.1",
+  "description": "A static website generator",
+  "author": "Nicolás Arias <ezakto@ezakto.com>",
+  "keywords": ["static", "generator", "template", "mustache", "markdown", "cli"],
+  "main": "lib/statiq",
+  "preferGlobal": true,
+  "bin": {
+    "statiq": "bin/statiq"
+  },
+  "dependencies": {
+    "underscore": "1.4.x",
+    "mkdirp": "0.3.x",
+    "marked": "0.2.x",
+    "mu2": "0.5.x"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/ezakto/statiq.git"
+  }
+}
