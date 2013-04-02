@@ -1,0 +1,10 @@
+{
+    "defaultTemplate": "index.html",
+    "templatesRoot": "test/tpl/",
+    "inputRoot": "test/src/",
+    "outputRoot": "test/dst/",
+    "globals": {
+        "sitename": "Statiq",
+        "year": 2013
+    }
+}
