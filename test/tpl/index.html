@@ -2,4 +2,15 @@
 
 {{{document}}}
 
+---
+
+{{> article_list.html}}
+
+<h4>Subs:</h4>
+<ul>
+{{#list_articles/subarticles}}
+    <li><a href="{{url}}">{{title}}</a></li>
+{{/list_articles/subarticles}}
+</ul>
+
 {{> footer.html}}
