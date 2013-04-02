@@ -11,13 +11,12 @@ while (!config && statiqpath != '/') {
     var statiqjson = path.join(statiqpath, 'statiq.json');
     if (fs.existsSync(statiqjson)) {
         config = require(statiqjson);
+        config.root = statiqpath;
     }
     else {
         statiqpath = path.dirname(statiqpath);
     }
 }
-
-config.root = statiqpath;
 
 // Let's go
 require('../lib/statiq.js').load(config).process();
