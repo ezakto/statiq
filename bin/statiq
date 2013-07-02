@@ -1,23 +1,63 @@
 #!/usr/bin/env node
 
-var fs   = require('fs'),
-    path = require('path');
+var fs      = require('fs'),
+    path    = require('path'),
+    mkdirp  = require('mkdirp');
+    program = require('commander');
 
-var config,
-    statiqpath = process.cwd();
+var init = program.command('init');
 
-// Look up for statiq.json file
-while (!config && statiqpath != '/') {
-    var statiqjson = path.join(statiqpath, 'statiq.json');
-    if (fs.existsSync(statiqjson)) {
-        config = require(statiqjson);
-        config.root = statiqpath;
-    }
-    else {
-        statiqpath = path.dirname(statiqpath);
-    }
-}
+init
+    .usage('[path]')
+    .action(function(d){
+        var dir = d || '.',
+            config = {
+                "defaultTemplate": "index.html",
+                "templatesRoot": "tpl/",
+                "inputRoot": "src/",
+                "outputRoot": "dst/",
+                "globals": {
+                    "sitename": "Statiq"
+                }
+            };
 
-// Let's go
-require('../lib/statiq.js').load(config).process();
+        if (dir != '.') mkdirp.sync(dir);
+
+        mkdirp.sync(path.join(dir, 'tpl'));
+        mkdirp.sync(path.join(dir, 'src'));
+        mkdirp.sync(path.join(dir, 'dst'));
+
+        fs.writeFile(path.join(dir, 'statiq.json'), JSON.stringify(config, null, 4));
+    });
+
+var build = program.command('build');
+
+build
+    .option('-f, --file <filename>', 'Specify a configuration file. Defaults to statiq.json', 'statiq.json')
+    .option('-i, --input <path>',    'Specify an input directory')
+    .option('-o, --output <path>',   'Specify an output directory')
+    .action(function(){
+        var config,
+            statiqpath = process.cwd();
+            
+        // Look up for statiq.json file
+        while (!config && statiqpath != '/') {
+            var statiqjson = path.join(statiqpath, build.file);
+            if (fs.existsSync(statiqjson)) {
+                config = require(statiqjson);
+                config.root = statiqpath;
+            }
+            else {
+                statiqpath = path.dirname(statiqpath);
+            }
+        }
+        
+        if (build.input)  config.inputRoot  = build.input;
+        if (build.output) config.outputRoot = build.output;
+        
+        // Let's go
+        require('../lib/statiq.js').load(config).process();
+    });
+
+program.parse(process.argv);
 
