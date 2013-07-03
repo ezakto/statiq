@@ -10,7 +10,7 @@ var init = program.command('init');
 init
     .usage('[path]')
     .action(function(d){
-        var dir = d || '.',
+        var dir = typeof d == 'string' ? d : '.',
             config = {
                 "defaultTemplate": "index.html",
                 "templatesRoot": "tpl/",
