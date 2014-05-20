@@ -1,63 +1,59 @@
 #!/usr/bin/env node
 
-var fs      = require('fs'),
-    path    = require('path'),
-    mkdirp  = require('mkdirp');
-    program = require('commander');
+var fs     = require('fs'),
+    path   = require('path'),
+    argv   = require('minimist')(process.argv.slice(2)),
+    mkdirp = require('mkdirp'),
+    statiq = require('../lib/statiq');
 
-var init = program.command('init');
-
-init
-    .usage('[path]')
-    .action(function(d){
-        var dir = typeof d == 'string' ? d : '.',
-            config = {
-                "defaultTemplate": "index.html",
-                "templatesRoot": "tpl/",
-                "inputRoot": "src/",
-                "outputRoot": "dst/",
-                "globals": {
-                    "sitename": "Statiq"
-                }
-            };
-
-        if (dir != '.') mkdirp.sync(dir);
-
-        mkdirp.sync(path.join(dir, 'tpl'));
-        mkdirp.sync(path.join(dir, 'src'));
-        mkdirp.sync(path.join(dir, 'dst'));
-
-        fs.writeFile(path.join(dir, 'statiq.json'), JSON.stringify(config, null, 4));
-    });
-
-var build = program.command('build');
-
-build
-    .option('-f, --file <filename>', 'Specify a configuration file. Defaults to statiq.json', 'statiq.json')
-    .option('-i, --input <path>',    'Specify an input directory')
-    .option('-o, --output <path>',   'Specify an output directory')
-    .action(function(){
-        var config,
-            statiqpath = process.cwd();
-            
-        // Look up for statiq.json file
-        while (!config && statiqpath != '/') {
-            var statiqjson = path.join(statiqpath, build.file);
-            if (fs.existsSync(statiqjson)) {
-                config = require(statiqjson);
-                config.root = statiqpath;
-            }
-            else {
-                statiqpath = path.dirname(statiqpath);
-            }
+function lookup() {
+    var statiqjson = '';
+    var statiqpath = process.cwd();
+    while (!statiqjson && statiqpath != '/') {
+        if (fs.existsSync(path.join(statiqpath, 'statiq.json'))) {
+            statiqjson = require(path.join(statiqpath, 'statiq.json'));
+            statiqjson.cwd = statiqjson.cwd ? path.join(statiqpath, statiqjson.cwd) : statiqpath;
+        } else {
+            statiqpath = path.dirname(statiqpath);
         }
-        
-        if (build.input)  config.inputRoot  = build.input;
-        if (build.output) config.outputRoot = build.output;
-        
-        // Let's go
-        require('../lib/statiq.js').load(config).process();
-    });
+    }
+    return statiqjson;
+}
 
-program.parse(process.argv);
+function cli() {
+    // No args, lookup for statiq.json and parse
+    if (!argv._.length) {
+        statiq(lookup());
+    // Else check commands
+    } else switch(argv._[0]) {
+        case 'init':
+            if (!argv.d || argv.a) {
+                fs.writeFileSync(path.join(process.cwd(), 'statiq.json'), JSON.stringify({
+                    defaultTemplate: 'index.html',
+                    tplPath: 'templates',
+                    srcPath: 'sources',
+                    dstPath: 'dist',
+                    globals: {
+                        sitename: ''
+                    }
+                }, null, '    '));
+                console.log('\u2713 File statiq.json created');
+            }
 
+            if (argv.d || argv.a) {
+                var json = lookup();
+                mkdirp(path.join(json.cwd, json.srcPath), function(err){
+                    !err && console.log('\u2713 Sources directory created');
+                });
+                mkdirp(path.join(json.cwd, json.tplPath), function(err){
+                    !err && console.log('\u2713 Templates directory created');
+                });
+                mkdirp(path.join(json.cwd, json.dstPath), function(err){
+                    !err && console.log('\u2713 Dist directory created');
+                });
+            }
+            break;
+    }
+}
+
+cli();
