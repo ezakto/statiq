@@ -1,6 +1,6 @@
 {
   "name": "statiq",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "description": "A static website generator",
   "author": "Nicolás Arias <ezakto@ezakto.com>",
   "keywords": [
