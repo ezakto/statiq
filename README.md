@@ -3,7 +3,7 @@ statiq
 
 A node.js static website generator
 
-Statiq reads a folder structure of input files and generates a replicated structure with web-ready files.
+Statiq reads a folder structure of source files and generates a replicated structure with web-ready files.
 
 It uses [Mustache](http://mustache.github.com) templates parsed with [Mu2](http://github.com/raycmorgan/Mu),
 and [Markdown](http://en.wikipedia.org/wiki/Markdown) language for content documents, parsed thanks to [Marked](http://github.com/chjj/marked).
@@ -14,28 +14,19 @@ and [Markdown](http://en.wikipedia.org/wiki/Markdown) language for content docum
 
 ### Basic usage:
 
-Make template, source and distribution folders:
+Create a `statiq.json` file with the cli tool:
 
-    $ mkdir tpl
-    $ mkdir src
-    $ mkdir dst
+    $ statiq init
 
-Then a `statiq.json` file:
+You can edit the file contents, and then you can create the folders running:
 
-    $ nano statiq.json
-    
-    {
-        "defaultTemplate": "index.html",
-        "templatesRoot": "tpl/",
-        "inputRoot": "src/",
-        "outputRoot": "dst/"
-    }
+    $ statiq init -d
 
-Build a directory structure in src folder, with markdown-formatted pages, like
+And you're ready. Source documents go to the sources folder and templates in the templates folder. The generated website will go to the dist folder. Build your website structure in the sources folder, with markdown-formatted pages. For example:
 
-    src/index.md
-    src/about.md
-    src/docs/index.md
+    sources/index.md
+    sources/about.md
+    sources/docs/index.md
 
 Sample index.md:
 
@@ -44,7 +35,7 @@ Sample index.md:
     
     This is a *test page*.
 
-Then make an index.html file containing a mustache template in your tpl folder:
+Then make an index.html file containing a mustache template in your templates folder:
 
     <!doctype html>
     <html>
@@ -59,20 +50,20 @@ Then make an index.html file containing a mustache template in your tpl folder:
     </body>
     </html>
 
-The `document` variable contains the parsed document.
+The `document` variable contains the parsed html.
 Finally, run:
 
     $ statiq
 
-And you'll get all the parsed pages in your distribution folder:
+You'll get all the parsed pages in your distribution folder:
 
-    dst/index.html
-    dst/about.html
-    dst/docs/index.html
+    dist/index.html
+    dist/about.html
+    dist/docs/index.html
 
 ### Local variables
 
-You can set local variables in each source file, by placing a json object in its first line:
+You can set local variables for each source file, by placing a json object in its first line:
 
     {
       "title": "Index page"
@@ -83,7 +74,7 @@ You can set local variables in each source file, by placing a json object in its
     ...
 
 
-Notice the required semicolon at the end of the json object.
+*Notice the required semicolon at the end of the json object.*
 Then your template could look like:
 
     <!doctype html>
@@ -118,7 +109,7 @@ Consider a multicolumn layout like this:
     </body>
     </html>
 
-Instead of using the `document` variable (which contains the full .md file), you can declare sections just like this:
+Instead of using the `document` variable (which contains the entire page), you can define sections just like this:
 
     {
       "title": "Multi column",
@@ -139,13 +130,13 @@ Instead of using the `document` variable (which contains the full .md file), you
     right;
 
 This is a [Heredoc](http://en.wikipedia.org/wiki/Here_document)-ish declaration.
-Sections start in a newline with `<<` followed by the section name, and another newline.
-Then, you close the section with a newline followed by the section name, a semicolon, and a newline again.
-Section names must be case-sensitive alphanumeric strings.
+Sections start in a newline, with `<<SECTION_NAME` and another newline.
+Then, you close the section with `SECTION_NAME;`.
+Section names are case-sensitive alphanumeric strings.
 
 ### Global variables
 
-Use the "globals" attribute of the `statiq.json` object:
+Use the "globals" property of the `statiq.json` object:
 
     {
       ...
@@ -169,24 +160,21 @@ Those variables will be available across the site:
 You can iterate files in a given folder with the special `list_*` variables.
 Given this structure:
 
-    src/index.md
-    src/articles/myarticle.md
-    src/articles/myarticle2.md
-    src/articles/myarticle3.md
+    sources/index.md
+    sources/articles/myarticle.md
+    sources/articles/myarticle2.md
+    sources/articles/myarticle3.md
+    sources/articles/subarticles/subarticle.md
+    sources/articles/subarticles/subarticle2.md
 
-You can list the articles folder in your templates with the `list_articles` variable:
+You can list the articles folder in your templates with the `list_articles` variable, and the subarticles folder with `list_articles/subarticles`.
 
     <h4>Articles:</h4>
     <ul>
     {{#list_articles}}
-        <li><a href="{{url}}">{{title}}</a></li>
+        <li><a href="{{path}}">{{title}}</a></li>
     {{/list_articles}}
     </ul>
 
-Each item in a `list_*` variable has access to local variables of that file,
-plus an `url` variable that points to the file path relative to the current file. This is great for link indexes.
-
-### That's all
-
-First time doing node stuff, don't hate me :)
-
+The context of the `list_*` variable items is set to the local hash of that file.
+With the plus `path` variable that points to that file relatively from the current file. This is great for indexes.
