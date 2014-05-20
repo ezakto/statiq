@@ -1,10 +1,11 @@
 {
     "defaultTemplate": "index.html",
-    "templatesRoot": "test/tpl/",
-    "inputRoot": "test/src/",
-    "outputRoot": "test/dst/",
+    "tplPath": "templates",
+    "srcPath": "sources",
+    "dstPath": "dist",
+    "cwd": "examples",
     "globals": {
         "sitename": "Statiq",
-        "year": 2013
+        "year": 2014
     }
 }
