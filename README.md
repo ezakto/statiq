@@ -5,16 +5,13 @@ A node.js static website generator
 
 Statiq reads a folder structure of source files and generates a replicated structure with web-ready files.
 
-It uses [Mustache](http://mustache.github.com) templates parsed with [Mu2](http://github.com/raycmorgan/Mu),
-and [Markdown](http://en.wikipedia.org/wiki/Markdown) language for content documents, parsed thanks to [Marked](http://github.com/chjj/marked).
-
 ### Install:
 
     npm install -g statiq
 
 ### Basic usage:
 
-Create a `statiq.json` file with the cli tool:
+Create a `statiqfile.js` file with the cli tool:
 
     $ statiq init
 
@@ -22,7 +19,7 @@ You can edit the file contents, and then you can create the folders running:
 
     $ statiq init -d
 
-And you're ready. Source documents go to the sources folder and templates in the templates folder. The generated website will go to the dist folder. Build your website structure in the sources folder, with markdown-formatted pages. For example:
+And you're ready to go. Source documents go to the sources folder and templates in the templates folder. The generated website will go to the dist folder. Build your website structure in the sources folder, with markdown-formatted pages. For example:
 
     sources/index.md
     sources/about.md
@@ -35,7 +32,7 @@ Sample index.md:
     
     This is a *test page*.
 
-Then make an index.html file containing a mustache template in your templates folder:
+Then make an index.html file in your templates folder. The default template engine is ejs, but it can be changed in the statiqfile.js.
 
     <!doctype html>
     <html>
@@ -45,7 +42,7 @@ Then make an index.html file containing a mustache template in your templates fo
     </head>
     <body>
         <div id="main">
-            {{{document}}}
+            <%- document %>
         </div>
     </body>
     </html>
@@ -81,7 +78,7 @@ Then your template could look like:
     <html>
     <head>
         <meta charset="UTF-8">
-        <title>{{title}}</title>
+        <title><%= title %></title>
     </head>
     <body>
     ...
@@ -94,18 +91,18 @@ Consider a multicolumn layout like this:
     <html>
     <head>
         <meta charset="UTF-8">
-        <title>{{title}}</title>
+        <title><%= title %></title>
     </head>
     <body>
         <div id="main">
             <div class="left-column">
-                {{{left}}}
+                <%- left %>
             </div>
             <div class="right-column">
-                {{{right}}}
+                <%- right %>
             </div>
         </div>
-        <div id="footer">Copyright &copy; {{year}}</div>
+        <div id="footer">Copyright &copy; <%= year %></div>
     </body>
     </html>
 
@@ -136,28 +133,28 @@ Section names are case-sensitive alphanumeric strings.
 
 ### Global variables
 
-Use the "globals" property of the `statiq.json` object:
+Use the "globals" property in the configuration object within the `statiqfile.js` object:
 
-    {
+    statiq.config({
       ...
-      "globals": {
-        "sitename": "My awesome website",
-        "...": "..."
+      globals: {
+        sitename: "My awesome website",
+        ...
       }
-    }
+    })
 
 Those variables will be available across the site:
 
     <!doctype html>
     <head>
-       <title>{{title}} - {{sitename}}</title>
+       <title><%= title %> - <%= sitename %></title>
     </head>
     <body>
     ...
 
 ### Directory indexes
 
-You can iterate files in a given folder with the special `list_*` variables.
+You can iterate files in a given folder with the special `index[folder]` variables.
 Given this structure:
 
     sources/index.md
@@ -167,14 +164,13 @@ Given this structure:
     sources/articles/subarticles/subarticle.md
     sources/articles/subarticles/subarticle2.md
 
-You can list the articles folder in your templates with the `list_articles` variable, and the subarticles folder with `list_articles/subarticles`.
+You can list the articles folder in your templates with the `index['articles']` variable, and the subarticles folder with `index['articles/subarticles']`.
 
     <h4>Articles:</h4>
     <ul>
-    {{#list_articles}}
-        <li><a href="{{path}}">{{title}}</a></li>
-    {{/list_articles}}
+    <% index['articles'].forEach(function(article){ %>
+        <li><a href="<%= article.path %>"><%= article.title %></a></li>
+    <% }) %>
     </ul>
 
-The context of the `list_*` variable items is set to the local hash of that file.
-With the plus `path` variable that points to that file relatively from the current file. This is great for indexes.
+The context of the `index[folder]` variable items is set to the local hash of that file with the plus `path` variable that points to the item file relatively from the current file. This is great for navigable indexes.
