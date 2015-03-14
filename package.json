@@ -1,6 +1,6 @@
 {
   "name": "statiq",
-  "version": "0.1.6",
+  "version": "0.2.0",
   "description": "A static website generator",
   "author": "Nicolás Arias <ezakto@ezakto.com>",
   "keywords": [
@@ -17,11 +17,10 @@
     "statiq": "bin/statiq"
   },
   "dependencies": {
-    "minimist": "^0.1.0",
-    "mu2": "^0.5.20",
-    "marked": "^0.3.2",
     "lodash": "^2.4.1",
-    "mkdirp": "^0.5.0"
+    "minimist": "^0.1.0",
+    "mkdirp": "^0.5.0",
+    "promise": "^6.1.0"
   },
   "repository": {
     "type": "git",

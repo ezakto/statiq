@@ -7,41 +7,35 @@ var fs     = require('fs'),
     statiq = require('../lib/statiq');
 
 function lookup() {
-    var statiqjson = '';
+    var statiqfile = false;
     var statiqpath = process.cwd();
-    while (!statiqjson && statiqpath != '/') {
-        if (fs.existsSync(path.join(statiqpath, 'statiq.json'))) {
-            statiqjson = require(path.join(statiqpath, 'statiq.json'));
-            statiqjson.cwd = statiqjson.cwd ? path.join(statiqpath, statiqjson.cwd) : statiqpath;
+    while (!statiqfile && statiqpath != '/') {
+        if (fs.existsSync(path.join(statiqpath, 'statiqfile.js'))) {
+            statiqfile = require(path.join(statiqpath, 'statiqfile.js'));
         } else {
             statiqpath = path.dirname(statiqpath);
         }
     }
-    return statiqjson;
+    return statiqfile;
 }
 
 function cli() {
-    // No args, lookup for statiq.json and parse
+    // No args, lookup for statiqfile and parse
     if (!argv._.length) {
-        statiq(lookup());
+        lookup()(statiq);
+        statiq.index();
+        statiq.parse();
     // Else check commands
     } else switch(argv._[0]) {
         case 'init':
             if (!argv.d || argv.a) {
-                fs.writeFileSync(path.join(process.cwd(), 'statiq.json'), JSON.stringify({
-                    defaultTemplate: 'index.html',
-                    tplPath: 'templates',
-                    srcPath: 'sources',
-                    dstPath: 'dist',
-                    globals: {
-                        sitename: ''
-                    }
-                }, null, '    '));
-                console.log('\u2713 File statiq.json created');
+                fs.writeFileSync(path.join(process.cwd(), 'statiqfile.js'), fs.readFileSync(path.join(__dirname, '..', 'lib', 'statiqfile.js')));
+                fs.writeFileSync(path.join(process.cwd(), 'package.json'), fs.readFileSync(path.join(__dirname, '..', 'lib', 'package.json')));
+                console.log('\u2713 package.json & statiqfile created. Run "npm install ." to download dependencies.');
             }
 
             if (argv.d || argv.a) {
-                var json = lookup();
+                var json = lookup(statiq);
                 mkdirp(path.join(json.cwd, json.srcPath), function(err){
                     !err && console.log('\u2713 Sources directory created');
                 });

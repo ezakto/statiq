@@ -1,13 +1,13 @@
-{{> header.html}}
+<%- include('header.html') %>
 
 <div class="left hero-unit">
-    {{{hero}}}
+    <%- hero %>
 </div>
 
 <hr>
 
 <div class="right content">
-    {{{body}}}
+    <%- body %>
 </div>
 
-{{> footer.html}}
+<%- include('footer.html') %>

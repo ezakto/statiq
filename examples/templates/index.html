@@ -1,18 +1,18 @@
-{{> header.html}}
+<%- include('header.html') %>
 
-{{{document}}}
+<%- document %>
 
 ---
 
-{{> article_list.html}}
+<%- include('article_list.html') %>
 
 <h4>Subs:</h4>
 <ul>
-{{#list_articles/subarticles}}
-    <li><a href="{{path}}">{{title}}</a></li>
-{{/list_articles/subarticles}}
+<% index['articles/subarticles'].forEach(function(subarticle){ %>
+    <li><a href="<%= subarticle.path %>"><%= subarticle.title %></a></li>
+<% }) %>
 </ul>
 
-Path to index: {{root}}/index.html
+Path to home: <%= root %>/index.html
 
-{{> footer.html}}
+<%- include('footer.html') %>
