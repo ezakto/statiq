@@ -29,8 +29,8 @@ function cli() {
     } else switch(argv._[0]) {
         case 'init':
             if (!argv.d || argv.a) {
-                fs.writeFileSync(path.join(process.cwd(), 'statiqfile.js'), fs.readFileSync(path.join(__dirname, '..', 'lib', 'statiqfile.js')));
-                fs.writeFileSync(path.join(process.cwd(), 'package.json'), fs.readFileSync(path.join(__dirname, '..', 'lib', 'package.json')));
+                fs.writeFileSync(path.join(process.cwd(), 'statiqfile.js'), fs.readFileSync(path.join(__dirname, '..', 'lib', 'statiqfile.js.src')));
+                fs.writeFileSync(path.join(process.cwd(), 'package.json'), fs.readFileSync(path.join(__dirname, '..', 'lib', 'package.json.src')));
                 console.log('\u2713 package.json & statiqfile created. Run "npm install ." to download dependencies.');
             }
 
