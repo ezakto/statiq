@@ -4,16 +4,16 @@ var fs     = require('fs'),
     path   = require('path'),
     argv   = require('minimist')(process.argv.slice(2)),
     mkdirp = require('mkdirp'),
-    statiq = require('../lib/statiq');
+    statiq = require('../lib/statiq'),
+    cwd    = process.cwd();
 
 function lookup() {
     var statiqfile = false;
-    var statiqpath = process.cwd();
-    while (!statiqfile && statiqpath != '/') {
-        if (fs.existsSync(path.join(statiqpath, 'statiqfile.js'))) {
-            statiqfile = require(path.join(statiqpath, 'statiqfile.js'));
+    while (!statiqfile && cwd != '/') {
+        if (fs.existsSync(path.join(cwd, 'statiqfile.js'))) {
+            statiqfile = require(path.join(cwd, 'statiqfile.js'));
         } else {
-            statiqpath = path.dirname(statiqpath);
+            cwd = path.dirname(cwd);
         }
     }
     return statiqfile;
@@ -23,6 +23,9 @@ function cli() {
     // No args, lookup for statiqfile and parse
     if (!argv._.length) {
         lookup()(statiq);
+        if(!statiq._config.cwd) {
+            statiq.config({ cwd: cwd });
+        }
         statiq.index();
         statiq.parse();
     // Else check commands
