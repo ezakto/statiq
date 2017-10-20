@@ -14,12 +14,12 @@ module.exports = function(statiq) {
         globals: {
         },
 
-        defaultTemplate: "index.html",
+        defaultTemplate: 'index.html',
 
         contentParser: marked,
 
-        templateParser: function(file, data) {
-            return ejs.render(readfile(file, { encoding: 'utf8' }), data, {
+        templateParser: function(path, data) {
+            return ejs.render(readfile(path, 'utf8'), data, {
                 filename: data.template
             });
         }

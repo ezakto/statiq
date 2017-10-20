@@ -60,18 +60,17 @@ You'll get all the parsed pages in your distribution folder:
 
 ### Local variables
 
-You can set local variables for each source file, by placing a json object in its first line:
+You can set local variables for each source file, by placing a yaml/json object in its first lines:
 
-    {
-      "title": "Index page"
-    };
+    title: Index page
+    ---
     
     Welcome!
     ========
     ...
 
 
-*Notice the required semicolon at the end of the json object.*
+*Notice the required triple dash (`---`) at the end of the variables.*
 Then your template could look like:
 
     <!doctype html>
@@ -108,10 +107,9 @@ Consider a multicolumn layout like this:
 
 Instead of using the `document` variable (which contains the entire page), you can define sections just like this:
 
-    {
-      "title": "Multi column",
-      "year": 2013
-    };
+    title: Multi column
+    year: 2013
+    ---
     
     <<left
     Welcome!
@@ -174,3 +172,4 @@ You can list the articles folder in your templates with the `index['articles']` 
     </ul>
 
 The context of the `index[folder]` variable items is set to the local hash of that file with the plus `path` variable that points to the item file relatively from the current file. This is great for navigable indexes.
+Files prefixed with `_` won't be included in the index.
