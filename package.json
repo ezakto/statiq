@@ -1,8 +1,9 @@
 {
   "name": "statiq",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "A static website generator",
-  "author": "Nicolás Arias <ezakto@ezakto.com>",
+  "author": "Nicolás Arias <nicolas@nicolasarias.com>",
+  "preferGlobal": true,
   "keywords": [
     "simple",
     "static",
@@ -10,20 +11,17 @@
     "generator",
     "cli"
   ],
-  "main": "lib/statiq",
-  "preferGlobal": true,
+  "main": "index.js",
   "bin": {
     "statiq": "bin/statiq"
-  },
-  "dependencies": {
-    "js-yaml": "^3.10.0",
-    "minimist": "^0.1.0",
-    "mkdirp": "^0.5.0",
-    "object.assign": "^1.1.1",
-    "promise": "^6.1.0"
   },
   "repository": {
     "type": "git",
     "url": "git://github.com/ezakto/statiq.git"
+  },
+  "dependencies": {
+    "js-yaml": "^3.10.0",
+    "minimist": "^1.2.0",
+    "mkdirp": "^0.5.1"
   }
 }
