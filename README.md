@@ -3,11 +3,15 @@ statiq
 
 A node.js static website generator
 
-Statiq reads a folder structure of source files and generates a replicated structure with web-ready files.
+Statiq reads a folder structure of source files and generates web-ready files.
 
 ### Install:
 
     npm install -g statiq
+
+You might want to install `ejs` (templates) and `marked` (markdown) in your project folder:
+
+    npm install --save ejs marked
 
 ### Basic usage:
 
@@ -19,11 +23,11 @@ You can edit the file contents, and then you can create the folders running:
 
     $ statiq init -d
 
-And you're ready to go. Source documents go to the sources folder and templates in the templates folder. The generated website will go to the dist folder. Build your website structure in the sources folder, with markdown-formatted pages. For example:
+And you're ready to go. Source documents go to the content folder and templates in the templates folder. The resulting website will go to the publish folder. Build your website structure in the content folder, with markdown-formatted pages. For example:
 
-    sources/index.md
-    sources/about.md
-    sources/docs/index.md
+    content/index.md
+    content/about.md
+    content/docs/index.md
 
 Sample index.md:
 
@@ -32,7 +36,7 @@ Sample index.md:
     
     This is a *test page*.
 
-Then make an index.html file in your templates folder. The default template engine is ejs, but it can be changed in the statiqfile.js.
+Then make an index.html file in your templates folder.
 
     <!doctype html>
     <html>
@@ -52,15 +56,15 @@ Finally, run:
 
     $ statiq
 
-You'll get all the parsed pages in your distribution folder:
+You'll get all the parsed pages in your publish folder:
 
-    dist/index.html
-    dist/about.html
-    dist/docs/index.html
+    publish/index.html
+    publish/about.html
+    publish/docs/index.html
 
 ### Local variables
 
-You can set local variables for each source file, by placing a yaml/json object in its first lines:
+You can set context variables for each source file, by placing a yaml/json object in its first lines:
 
     title: Index page
     ---
@@ -69,8 +73,8 @@ You can set local variables for each source file, by placing a yaml/json object 
     ========
     ...
 
+*Notice the required triple dash (`---`)*
 
-*Notice the required triple dash (`---`) at the end of the variables.*
 Then your template could look like:
 
     <!doctype html>
@@ -82,7 +86,7 @@ Then your template could look like:
     <body>
     ...
 
-### Sections
+### Blocks
 
 Consider a multicolumn layout like this:
 
@@ -105,7 +109,7 @@ Consider a multicolumn layout like this:
     </body>
     </html>
 
-Instead of using the `document` variable (which contains the entire page), you can define sections just like this:
+Instead of using the `document` variable, you can define block sections just like this:
 
     title: Multi column
     year: 2013
@@ -125,44 +129,46 @@ Instead of using the `document` variable (which contains the entire page), you c
     right;
 
 This is a [Heredoc](http://en.wikipedia.org/wiki/Here_document)-ish declaration.
-Sections start in a newline, with `<<SECTION_NAME` and another newline.
-Then, you close the section with `SECTION_NAME;`.
-Section names are case-sensitive alphanumeric strings.
+By default, blocks start in a newline, with `<<BLOCK_NAME` and another newline.
+Then, you close the block with `BLOCK_NAME;`.
+Block names are case-sensitive alphanumeric strings.
 
-### Global variables
+### Directory context
 
-Use the "globals" property in the configuration object within the `statiqfile.js` object:
+If files in a same folder share some metadata, you can put it in context files within the folder. For example, add a `context.json` or `context.yaml` file in the `content/docs/` folder, like this:
+
+    subtitle: My documents
+    somedata: ...
+
+Now, all your files under `content/docs/` (including sub-directories) will share those variables (unless they are overwritten by a deeper level contexxt or in-file context).
+
+### Global context
+
+Use the `context` property in the configuration object within the `statiqfile.js`:
 
     statiq.config({
       ...
-      globals: {
+      context: {
         sitename: "My awesome website",
         ...
       }
     })
 
-Those variables will be available across the site:
-
-    <!doctype html>
-    <head>
-       <title><%= title %> - <%= sitename %></title>
-    </head>
-    <body>
-    ...
+This works just like putting a `context.yaml` file in `content/`. However, using the statiqfile, you can pass functions aswell (like moment.js, sorting methods, etc).
 
 ### Directory indexes
 
 You can iterate files in a given folder with the special `index[folder]` variables.
 Given this structure:
 
-    sources/index.md
-    sources/articles/myarticle.md
-    sources/articles/myarticle2.md
-    sources/articles/myarticle3.md
-    sources/articles/subarticles/subarticle.md
-    sources/articles/subarticles/subarticle2.md
+    content/index.md
+    content/articles/myarticle.md
+    content/articles/myarticle2.md
+    content/articles/myarticle3.md
+    content/articles/subarticles/subarticle.md
+    content/articles/subarticles/subarticle2.md
 
-You can list the articles folder in your templates with the `index['articles']` variable, and the subarticles folder with `index['articles/subarticles']`.
+You can list the articles folder in your templates accesing `index['articles']`, and the subarticles folder with `index['articles/subarticles']`.
 
     <h4>Articles:</h4>
     <ul>
@@ -171,5 +177,6 @@ You can list the articles folder in your templates with the `index['articles']` 
     <% }) %>
     </ul>
 
-The context of the `index[folder]` variable items is set to the local hash of that file with the plus `path` variable that points to the item file relatively from the current file. This is great for navigable indexes.
-Files prefixed with `_` won't be included in the index.
+Each `index[folder]` item is set to the context of that file plus `path` (that points to the item file relatively from the current file) and `current` (which is true when the item is the same file accessing it). This is great for navigable indexes.
+
+Files prefixed with `_` will be processed but they won't be included in the index.
