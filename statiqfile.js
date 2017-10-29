@@ -1,32 +1,29 @@
-var ejs = require('ejs');
-var marked = require('marked');
-var readfile = require('fs').readFileSync;
+const ejs = require('ejs');
+const marked = require('marked');
 
 module.exports = function(statiq) {
-    statiq.config({
+  statiq.config({
 
-        paths: {
-            templates: 'templates',
-            sources: 'sources',
-            distribution: 'dist'
-        },
+    paths: {
+      templates: 'templates',
+      content: 'content',
+      publish: 'public'
+    },
 
-        globals: {
-            sitename: "Statiq",
-            year: 2014
-        },
+    context: {
+      sitename: 'Statiq',
+      year: 2017
+    },
 
-        defaultTemplate: "index.html",
+    defaultTemplate: 'index.html',
 
-        cwd: "examples",
+    cwd: __dirname + '/examples',
 
-        contentParser: marked,
+    contentParser: marked,
 
-        templateParser: function(file, data) {
-            return ejs.render(readfile(file, { encoding: 'utf8' }), data, {
-                filename: data.template
-            });
-        }
+    templateParser: function(template, data) {
+      return ejs.render(template, data, { filename: data.template });
+    }
 
-    });
+  });
 };

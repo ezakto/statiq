@@ -1,56 +1,70 @@
 #!/usr/bin/env node
 
-var fs     = require('fs'),
-    path   = require('path'),
-    argv   = require('minimist')(process.argv.slice(2)),
-    mkdirp = require('mkdirp'),
-    statiq = require('../lib/statiq'),
-    cwd    = process.cwd();
-
-function lookup() {
-    var statiqfile = false;
-    while (!statiqfile && cwd != '/') {
-        if (fs.existsSync(path.join(cwd, 'statiqfile.js'))) {
-            statiqfile = require(path.join(cwd, 'statiqfile.js'));
-        } else {
-            cwd = path.dirname(cwd);
-        }
-    }
-    return statiqfile;
-}
+const fs = require('fs');
+const path = require('path');
+const argv = require('minimist')(process.argv.slice(2));
+const mkdirp = require('mkdirp');
+const statiq = require('../lib/statiq');
 
 function cli() {
-    // No args, lookup for statiqfile and parse
-    if (!argv._.length) {
-        lookup()(statiq);
-        if(!statiq._config.cwd) {
-            statiq.config({ cwd: cwd });
-        }
-        statiq.index();
-        statiq.parse();
-    // Else check commands
-    } else switch(argv._[0]) {
-        case 'init':
-            if (!argv.d || argv.a) {
-                fs.writeFileSync(path.join(process.cwd(), 'statiqfile.js'), fs.readFileSync(path.join(__dirname, '..', 'lib', 'statiqfile.js.src')));
-                fs.writeFileSync(path.join(process.cwd(), 'package.json'), fs.readFileSync(path.join(__dirname, '..', 'lib', 'package.json.src')));
-                console.log('\u2713 package.json & statiqfile created. Run "npm install ." to download dependencies.');
-            }
+  let cwd = process.cwd();
 
-            if (argv.d || argv.a) {
-                var json = lookup(statiq);
-                mkdirp(path.join(json.cwd, json.srcPath), function(err){
-                    !err && console.log('\u2713 Sources directory created');
-                });
-                mkdirp(path.join(json.cwd, json.tplPath), function(err){
-                    !err && console.log('\u2713 Templates directory created');
-                });
-                mkdirp(path.join(json.cwd, json.dstPath), function(err){
-                    !err && console.log('\u2713 Dist directory created');
-                });
-            }
-            break;
+  // statiqfile lookup
+  while (cwd !== '/') {
+    const filepath = path.join(cwd, 'statiqfile');
+
+    if (fs.existsSync(filepath + '.js')) {
+      require(filepath + '.js')(statiq);
+      break;
+    } else {
+      cwd = path.dirname(cwd);
     }
+  }
+
+  // If no cwd was setup, use statiqfile's dir
+  if (!statiq._config.cwd) {
+    statiq.config({ cwd });
+  }
+
+  // No args, lookup for statiqfile and parse
+  if (!argv._.length) {
+    const time = Date.now();
+    statiq
+      .scan()
+      .then(index => Promise.all(index.map(f => statiq.buildFile(f)
+        .then(target => argv.s || console.info('\u2713 ' + target))
+        .catch(err => argv.s || console.warn('\u2717 ' + f.filepath + '\n' + err))
+      )))
+      .then(() => console.info('Finished in', Date.now() - time, 'ms'));
+
+  // Else check commands
+  } else switch(argv._[0]) {
+    case 'init':
+      if (!argv.d || argv.a) {
+        fs.writeFileSync(path.join(process.cwd(), 'statiqfile.js'), fs.readFileSync(path.join(__dirname, '..', 'lib', 'statiqfile.js')));
+        console.info('\u2713 Example statiqfile.js created');
+      }
+
+      if (argv.d || argv.a) {
+        const config = statiq._config;
+
+        mkdirp(path.join(config.cwd, config.paths.content), err => {
+          if (err) return console.error(err);
+          console.info('\u2713 Content directory created');
+        });
+
+        mkdirp(path.join(config.cwd, config.paths.templates), err => {
+          if (err) return console.error(err);
+          console.info('\u2713 Templates directory created');
+        });
+
+        mkdirp(path.join(config.cwd, config.paths.publish), err => {
+          if (err) return console.error(err);
+          console.info('\u2713 Publish directory created');
+        });
+      }
+      break;
+  }
 }
 
 cli();

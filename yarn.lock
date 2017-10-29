@@ -6,6 +6,10 @@ argparse@^1.0.7:
   dependencies:
     sprintf-js "~1.0.2"
 
+ejs:
+  version "2.5.7"
+  resolved "https://registry.yarnpkg.com/ejs/-/ejs-2.5.7.tgz#cc872c168880ae3c7189762fd5ffc00896c9518a"
+
 esprima@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/esprima/-/esprima-4.0.0.tgz#4499eddcd1110e0b218bacf2fa7f7f59f55ca804"
@@ -16,6 +20,10 @@ js-yaml:
   dependencies:
     argparse "^1.0.7"
     esprima "^4.0.0"
+
+marked:
+  version "0.3.6"
+  resolved "https://registry.yarnpkg.com/marked/-/marked-0.3.6.tgz#b2c6c618fccece4ef86c4fc6cb8a7cbf5aeda8d7"
 
 minimist:
   version "1.2.0"
