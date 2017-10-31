@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const yaml = require('js-yaml');
 const argv = require('minimist')(process.argv.slice(2));
 const mkdirp = require('mkdirp');
 const statiq = require('../lib/statiq');
@@ -26,6 +27,8 @@ function cli() {
     statiq.config({ cwd });
   }
 
+  const config = statiq._config;
+
   // No args, lookup for statiqfile and parse
   if (!argv._.length) {
     const time = Date.now();
@@ -46,8 +49,6 @@ function cli() {
       }
 
       if (argv.d || argv.a) {
-        const config = statiq._config;
-
         mkdirp(path.join(config.cwd, config.paths.content), err => {
           if (err) return console.error(err);
           console.info('\u2713 Content directory created');
@@ -62,6 +63,25 @@ function cli() {
           if (err) return console.error(err);
           console.info('\u2713 Publish directory created');
         });
+      }
+      break;
+
+    case 'add':
+      if (argv._[1]) {
+        const filepath = argv._[1];
+        const dirname = path.dirname(filepath);
+        const filename = path.basename(filepath, config.contentExtension);
+        const target = path.join(statiq.path('content'), dirname, filename + config.contentExtension);
+
+        delete argv._;
+
+        if (fs.existsSync(target)) {
+          console.warn('\u2717', target, 'already exists');
+        } else {
+          const content = Object.keys(argv).length ? (yaml.safeDump(argv) + '---\n') : '';
+          fs.writeFileSync(target, content);
+          console.info('\u2713', target, 'created');
+        }
       }
       break;
   }
