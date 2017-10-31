@@ -23,7 +23,7 @@ You can edit the file contents, and then you can create the folders running:
 
     $ statiq init -d
 
-And you're ready to go. Source documents go to the content folder and templates in the templates folder. The resulting website will go to the publish folder. Build your website structure in the content folder, with markdown-formatted pages. For example:
+And you're ready to go. Source documents go to the content folder and templates in the templates folder. The resulting website will go to the publish folder. Assets folder is copied into publish folder as is. Build your website structure in the content folder, with markdown-formatted pages. For example:
 
     content/index.md
     content/about.md

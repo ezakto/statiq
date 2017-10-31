@@ -33,7 +33,9 @@ function cli() {
   if (!argv._.length) {
     const time = Date.now();
     statiq
-      .scan()
+      .copy()
+      .then(() => console.info('\u2713 Assets copied'))
+      .then(() => statiq.scan())
       .then(index => Promise.all(index.map(f => statiq.buildFile(f)
         .then(target => argv.s || console.info('\u2713 ' + target))
         .catch(err => argv.s || console.warn('\u2717 ' + f.filepath + '\n' + err))
@@ -62,6 +64,11 @@ function cli() {
         mkdirp(path.join(config.cwd, config.paths.publish), err => {
           if (err) return console.error(err);
           console.info('\u2713 Publish directory created');
+        });
+
+        mkdirp(path.join(config.cwd, config.paths.assets), err => {
+          if (err) return console.error(err);
+          console.info('\u2713 Assets directory created');
         });
       }
       break;
