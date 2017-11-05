@@ -76,19 +76,12 @@ function cli() {
     case 'add':
       if (argv._[1]) {
         const filepath = argv._[1];
-        const dirname = path.dirname(filepath);
-        const filename = path.basename(filepath, config.contentExtension);
-        const target = path.join(statiq.path('content'), dirname, filename + config.contentExtension);
 
         delete argv._;
 
-        if (fs.existsSync(target)) {
-          console.warn('\u2717', target, 'already exists');
-        } else {
-          const content = Object.keys(argv).length ? (yaml.safeDump(argv) + '---\n') : '';
-          fs.writeFileSync(target, content);
-          console.info('\u2713', target, 'created');
-        }
+        statiq.add(filepath, Object.keys(argv).length ? argv : null)
+          .then(target => console.info('\u2713', target, 'created'))
+          .catch(error => console.warn('\u2717', error));
       }
       break;
   }
