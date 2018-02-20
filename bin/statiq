@@ -22,6 +22,11 @@ function cli() {
     }
   }
 
+  if (cwd === '/') {
+    console.warn('No statiqfile.js found');
+    return;
+  }
+
   // If no cwd was setup, use statiqfile's dir
   if (!statiq._config.cwd) {
     statiq.config({ cwd });
@@ -36,11 +41,12 @@ function cli() {
       .copy()
       .then(() => console.info('\u2713 Assets copied'))
       .then(() => statiq.scan())
-      .then(index => Promise.all(index.map(f => statiq.buildFile(f)
+      .then(index => Promise.all(Object.keys(index).map(f => statiq.build(f)
         .then(target => argv.s || console.info('\u2713 ' + target))
-        .catch(err => argv.s || console.warn('\u2717 ' + f.filepath + '\n' + err))
+        .catch(err => argv.s || console.warn('\u2717 ' + f + '\n' + err.toString()))
       )))
-      .then(() => console.info('Finished in', Date.now() - time, 'ms'));
+      .then(() => console.info('Finished in', Date.now() - time, 'ms'))
+      .catch(err => console.error('\u2717 ' + err.toString()));
 
   // Else check commands
   } else switch(argv._[0]) {
@@ -79,9 +85,10 @@ function cli() {
 
         delete argv._;
 
-        statiq.add(filepath, Object.keys(argv).length ? argv : null)
+        statiq
+          .create(filepath, Object.keys(argv).length ? argv : null)
           .then(target => console.info('\u2713', target, 'created'))
-          .catch(error => console.warn('\u2717', error));
+          .catch(err => console.warn('\u2717', err.toString()));
       }
       break;
   }
