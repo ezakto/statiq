@@ -46,12 +46,12 @@ Then make an index.html file in your templates folder.
     </head>
     <body>
         <div id="main">
-            <%- document %>
+            <%- content %>
         </div>
     </body>
     </html>
 
-The `document` variable contains the parsed html.
+The `content` variable contains the parsed html.
 Finally, run:
 
     $ statiq
@@ -109,7 +109,7 @@ Consider a multicolumn layout like this:
     </body>
     </html>
 
-Instead of using the `document` variable, you can define block sections just like this:
+Instead of using the `content` variable, you can define block sections just like this:
 
     title: Multi column
     year: 2013
