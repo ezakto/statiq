@@ -7,12 +7,13 @@ module.exports = function(statiq) {
     paths: {
       templates: 'templates',
       content: 'content',
-      publish: 'public'
+      publish: 'public',
+      assets: 'assets'
     },
 
     context: {
       sitename: 'Statiq',
-      year: 2017
+      year: 2018
     },
 
     defaultTemplate: 'index.html',
@@ -21,9 +22,13 @@ module.exports = function(statiq) {
 
     contentParser: marked,
 
-    templateParser: function(template, data) {
-      return ejs.render(template, data, { filename: data.template });
-    }
+    templateParser: function(template, document) {
+      return ejs.render(template, Object.assign({}, document.context, {
+        content: document.content,
+      }), {
+        filename: document.templatePath,
+      });
+    },
 
   });
 };
