@@ -1,6 +1,6 @@
 {
   "name": "statiq",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "A static website generator",
   "author": "Nicolás Arias <nicolas@nicolasarias.com>",
   "preferGlobal": true,
