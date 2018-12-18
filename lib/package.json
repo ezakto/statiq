@@ -1,0 +1,10 @@
+{
+  "name": "statiqsite",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "ejs": "^2.6.1",
+    "marked": "^0.5.2",
+    "moment": "^2.23.0"
+  }
+}
