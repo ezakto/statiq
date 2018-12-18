@@ -2,8 +2,10 @@
 
 const fs = require('fs');
 const path = require('path');
+const http = require('http');
 const argv = require('minimist')(process.argv.slice(2));
 const mkdirp = require('mkdirp-promise');
+const serveHandler = require('serve-handler');
 const statiq = require('../lib/statiq');
 
 let cwd = process.cwd();
@@ -91,7 +93,7 @@ function init() {
       console.info('  install dependencies:')
       console.info('    $ npm install')
     }
-  });
+  }).catch(console.error);
 }
 
 function add() {
@@ -122,6 +124,18 @@ function build() {
     .catch(err => console.error('\u2717 ' + err.toString()));
 }
 
+function serve() {
+  const server = http.createServer((req, res) => {
+    return serveHandler(req, res, {
+      public: statiq._path('publish'),
+    });
+  })
+
+  server.listen(3000, () => {
+    console.log('Running at http://localhost:3000');
+  });
+}
+
 // No args, lookup for statiqfile and parse
 if (!argv._.length) {
   lookup();
@@ -138,6 +152,10 @@ if (!argv._.length) {
   case 'add':
     lookup();
     return add();
+
+  case 'serve':
+    lookup();
+    return serve();
 
   default:
     return console.log('Unknown command', argv._[0]);

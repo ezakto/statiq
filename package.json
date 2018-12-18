@@ -22,7 +22,8 @@
   "dependencies": {
     "js-yaml": "^3.10.0",
     "minimist": "^1.2.0",
-    "mkdirp-promise": "^5.0.1"
+    "mkdirp-promise": "^5.0.1",
+    "serve-handler": "^5.0.7"
   },
   "devDependencies": {
     "ejs": "^2.5.7",
