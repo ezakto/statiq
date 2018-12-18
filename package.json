@@ -1,6 +1,6 @@
 {
   "name": "statiq",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "A static website generator",
   "author": "Nicolás Arias <nicolas@nicolasarias.com>",
   "preferGlobal": true,
@@ -23,6 +23,7 @@
     "js-yaml": "^3.10.0",
     "minimist": "^1.2.0",
     "mkdirp-promise": "^5.0.1",
+    "node-watch": "^0.5.9",
     "serve-handler": "^5.0.7"
   },
   "devDependencies": {
