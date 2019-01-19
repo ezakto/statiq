@@ -173,3 +173,145 @@ You can list the articles folder in your templates accesing `index['articles']`,
 Each `index[folder]` item is set to the context of that file plus `path` (that points to the item file relatively from the current file) and `current` (which is true when the item is the same file accessing it). This is great for navigable indexes.
 
 Files prefixed with `_` will be processed but they won't be included in the index.
+
+## Command line tool
+
+    $ statiq
+Look for nearest statiqfile.js and build website
+
+    $ statiq init
+Create a new statiqfile and default folder structure
+
+    $ statiq init -s
+Create a new statiqfile only
+
+    $ statiq add <filename>
+Create a new website document/page/post
+
+    $ statiq add <filename> --<key>=<value> --<key>=<value>...
+Create a new document and set local context values
+
+    $ statiq serve
+Start a local server
+
+    $ statiq watch
+Start a file watcher and rebuild website when changes occur
+
+    $ statiq serve -w
+Start server and watcher
+
+    $ statiq help
+Show help
+
+## Programmatic API
+
+    const statiq = require('statiq');
+    
+    statiq
+      .config({
+        ...
+      })
+      .run();
+
+### Methods
+
+#### statiq.config(object config)
+
+Sets site configuration just like a statiqfile. Default configuration is:
+
+    {
+      paths: {
+        content: 'content',
+        templates: 'templates',
+        publish: 'publish',
+        assets: 'assets',
+      },
+      defaultTemplate: 'index.html',
+      contentExtension: '.md',
+      publishExtension: '.html',
+      hiddenRegex: /^_/, // filenames that shouldn't be included in indexes
+      contentParser: identity, // returns content as is
+      templateParser: simpleParser, // replaces {{key}} with value
+      contextHandler: identity, // doesn't transform contexts
+      indexHandler: identity, // doesn't transform indexes
+      assetHandler: syncCopy, // just copy assets
+      context: {}, // global context
+      cwd: null, // it's statiqfile.js dir, should be set when using the programmatic api
+    }
+
+Returns statiq.
+
+#### statiq.use(fn plugin)
+
+Adds a statiq plugin.
+Returns void.
+
+#### statiq.create(string file, object context, string content?)
+
+Creates a document `file` with local `context` and `content`.
+Returns a promise that resolves to the absolute path to the file.
+
+#### statiq.read(string file)
+
+Reads a file path and builds a document object.
+Returns a promise that resolves to:
+
+    {
+      documentPath,
+      sourcePath,
+      publishPath,
+      templatePath,
+      rawContext,
+      rawContent,
+      context,
+      content,
+    }
+
+#### statiq.update(string file, object context, string content)
+
+Updates the `context` and `content` of an existing `file`.
+Returns a promise that resolves to the absolute path to the file.
+
+#### statiq.delete(string file)
+
+Deletes an existing `file`.
+Returns a promise that resolves to void.
+
+#### statiq.loadContext(string dir)
+
+Tries to load and parse a context file in the given directory.
+Returns a promise that resolves to a context object or undefined if not found.
+
+#### statiq.scan(string dir?)
+
+Deep-scans a directory, reads its documents and caches the resulting document objects. If no directory is provided, it'll scan the default content directory.
+Returns a promise that resolves to the cached documents in the form `{ [file]: [document object]... }`.
+
+#### statiq.clear()
+
+Clears the cached documents and contexts.
+
+#### statiq.build(string file)
+
+Builds a single file. It'll use cached documents and contexts to generate indexes.
+Returns a promise that resolves to the absolute path to the generated file.
+
+#### statiq.buildAll()
+
+Builds all files in cache.
+Returns a promise that resolves to an array of absolute paths to the generated files.
+
+#### statiq.copyAsset(string file)
+
+Copies a file from the assets folder to the publish folder.
+Returns a promise that resolves to the absolute path to the new file.
+
+#### statiq.copy(string dir?)
+
+Deep copies the file contents of the given directory to the publish folder. If no directory is provided, it'll scan the default assets directory.
+Returns a promise that resolves to void.
+
+#### run
+
+Convenience method that clears cache, copies all assets, scans all documents and build them.
+Returns a promise that resolves to an array of absolute paths to the generated files.
