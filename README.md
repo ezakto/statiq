@@ -9,21 +9,14 @@ Statiq reads a folder structure of source files and generates web-ready files.
 
     npm install -g statiq
 
-You might want to install `ejs` (templates) and `marked` (markdown) in your project folder:
-
-    npm install --save ejs marked
-
 ### Basic usage:
 
-Create a `statiqfile.js` file with the cli tool:
+Create a statiq website with the cli tool:
 
     $ statiq init
 
-You can edit the file contents, and then you can create the folders running:
-
-    $ statiq init -d
-
-And you're ready to go. Source documents go to the content folder and templates in the templates folder. The resulting website will go to the publish folder. Assets folder is copied into publish folder as is. Build your website structure in the content folder, with markdown-formatted pages. For example:
+This will create a folder structure. Then run `$ npm install` to install default dependencies (`ejs` for templates and `marked` for markdown content) and you're ready to go.
+Source documents go to the content folder and templates in the templates folder. The resulting website will go to the publish folder. The assets folder is copied into the publish folder as is. Build your website structure in the content folder, with markdown-formatted pages. For example:
 
     content/index.md
     content/about.md
@@ -140,7 +133,7 @@ If files in a same folder share some metadata, you can put it in context files w
     subtitle: My documents
     somedata: ...
 
-Now, all your files under `content/docs/` (including sub-directories) will share those variables (unless they are overwritten by a deeper level contexxt or in-file context).
+Now, all your files under `content/docs/` (including sub-directories) will share those variables (unless they are overwritten by a deeper level context or in-file context).
 
 ### Global context
 
@@ -154,7 +147,7 @@ Use the `context` property in the configuration object within the `statiqfile.js
       }
     })
 
-This works just like putting a `context.yaml` file in `content/`. However, using the statiqfile, you can pass functions aswell (like moment.js, sorting methods, etc).
+This works just like putting a `context.yaml` file in `content/`. However, by using the statiqfile, you may pass functions aswell (like moment.js, sorting methods, etc).
 
 ### Directory indexes
 
