@@ -13,7 +13,7 @@ module.exports = function(statiq) {
 
     context: {
       sitename: 'Statiq',
-      year: 2018
+      year: 2019
     },
 
     defaultTemplate: 'index.html',
