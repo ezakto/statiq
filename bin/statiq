@@ -3,11 +3,15 @@
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
+const util = require('util');
 const argv = require('minimist')(process.argv.slice(2));
 const mkdirp = require('mkdirp-promise');
 const serveHandler = require('serve-handler');
-const statiq = require('../lib/statiq');
+const statiq = require('../lib/statiq')();
 const watcher = require('node-watch');
+
+const readFile = util.promisify(fs.readFile);
+const writeFile = util.promisify(fs.writeFile);
 
 let cwd = process.cwd();
 
@@ -28,6 +32,7 @@ Usage:
   statiq serve [options]  start local server
     Options:
       -w, --watch         also start watcher
+      -p, --port          port to listen to
 
   statiq watch            start watcher and rebuild website when
                           changes occur
@@ -39,10 +44,11 @@ Usage:
 function lookup() {
   // statiqfile lookup
   while (cwd !== '/') {
-    const filepath = path.join(cwd, 'statiqfile');
+    const filepath = path.join(cwd, 'statiqfile.js');
 
-    if (fs.existsSync(filepath + '.js')) {
-      require(filepath + '.js')(statiq);
+    if (fs.existsSync(filepath)) {
+      statiq.config({ cwd });
+      require(filepath)(statiq);
       break;
     } else {
       cwd = path.dirname(cwd);
@@ -53,104 +59,100 @@ function lookup() {
     console.warn('No statiqfile.js found');
     return;
   }
-
-  // If no cwd was setup, use statiqfile's dir
-  if (!statiq._config.cwd) {
-    statiq.config({ cwd });
-  }
 }
 
-function init() {
-  Promise.all((argv.s ? [] : [
-    mkdirp(path.join(process.cwd(), 'content')).then(() => {
-      return '\u2713 created content/';
-    }),
-    mkdirp(path.join(process.cwd(), 'templates')).then(() => {
-      return '\u2713 created templates/';
-    }),
-    mkdirp(path.join(process.cwd(), 'publish')).then(() => {
-      return '\u2713 created publish/';
-    }),
-    mkdirp(path.join(process.cwd(), 'assets')).then(() => {
-      return '\u2713 created assets/';
-    }),
-    new Promise((resolve, reject) => {
-      fs.readFile(path.join(__dirname, '..', 'lib', 'package.json'), (err, data) => {
-        if (err) return reject(err);
-        fs.writeFile(path.join(process.cwd(), 'package.json'), data, err => {
-          if (err) return reject(err);
-          resolve('\u2713 created package.json');
-        });
-      });
-    })
-  ]).concat(
-    new Promise((resolve, reject) => {
-      fs.readFile(path.join(__dirname, '..', 'lib', 'statiqfile.js'), (err, data) => {
-        if (err) return reject(err);
-        fs.writeFile(path.join(process.cwd(), 'statiqfile.js'), data, err => {
-          if (err) return reject(err);
-          resolve('\u2713 created statiqfile.js');
-        });
-      });
-    }),
-  )).then(messages => {
-    messages.forEach(msg => console.info(msg));
+async function init() {
+  if (argv.s) {
+    await Promise.all([
+      mkdirp(path.join(process.cwd(), 'content')).then(() => {
+        console.info('\u2713 created content/');
+      }),
+      mkdirp(path.join(process.cwd(), 'templates')).then(() => {
+        console.info('\u2713 created templates/');
+      }),
+      mkdirp(path.join(process.cwd(), 'publish')).then(() => {
+        console.info('\u2713 created publish/');
+      }),
+      mkdirp(path.join(process.cwd(), 'assets')).then(() => {
+        console.info('\u2713 created assets/');
+      }),
+    ]);
 
-    if (!argv.s) {
-      console.info('');
-      console.info('  install dependencies:')
-      console.info('    $ npm install')
-    }
-  }).catch(console.error);
+    const pkg = await readFile(path.join(__dirname, '..', 'lib', 'package.json'));
+    await writeFile(path.join(process.cwd(), 'package.json'), pkg);
+
+    console.info('\u2713 created package.json');
+  }
+
+  const statiqfile = await readFile(path.join(__dirname, '..', 'lib', 'statiqfile.js'));
+  await writeFile(path.join(process.cwd(), 'statiqfile.js'), statiqfile);
+
+  console.info('\u2713 created statiqfile.js');
+
+  if (!argv.s) {
+    console.info('');
+    console.info('  install dependencies:');
+    console.info('    $ npm install');
+  }
 }
 
 function add() {
-  if (argv._[1]) {
-    const filepath = argv._[1];
+  if (!argv._[1]) return;
 
-    delete argv._;
+  const filepath = argv._[1];
 
-    statiq
-      .create(filepath, Object.keys(argv).length ? argv : null)
-      .then(target => console.info('\u2713', target, 'created'))
-      .catch(err => console.warn('\u2717', err.toString()));
-  }
-}
-
-function build() {
-  const time = Date.now();
+  delete argv._;
 
   statiq
-    .copy()
-    .then(() => console.info('\u2713 Assets copied'))
-    .then(() => statiq.scan())
-    .then(index => Promise.all(Object.keys(index).map(f => statiq.build(f)
-      .then(target => argv.s || console.info('\u2713 ' + target))
-      .catch(err => argv.s || console.warn('\u2717 ' + f + '\n' + err.toString()))
-    )))
-    .then(() => console.info('Finished in', Date.now() - time, 'ms'))
-    .catch(err => console.error('\u2717 ' + err.toString()));
+    .create(filepath, Object.keys(argv).length ? argv : null, '')
+    .then(() => console.info('\u2713', filepath, 'created'))
+    .catch(err => console.warn('\u2717', err.toString()));
+}
+
+async function build() {
+  const time = Date.now();
+  console.log();
+
+  try {
+    await statiq.scan();
+    await statiq.buildAll();
+    (await statiq.writeAll()).map(path => argv.s || console.info('\u2713 ' + path));
+    await statiq.handleAssets()
+    console.info('\u2713 Assets copied');
+  } catch (err) {
+    console.error('\u2717 ' + err.toString());
+  }
+
+  console.info('\nFinished in', Date.now() - time, 'ms');
 }
 
 function serve() {
   const server = http.createServer((req, res) => {
-    return serveHandler(req, res, {
-      public: statiq._path('publish'),
-    });
-  })
+    const { cwd, publishPath } = statiq.config();
 
-  server.listen(3000, () => {
-    console.log('Running at http://localhost:3000');
+    return serveHandler(req, res, {
+      public: path.join(cwd, publishPath),
+    });
+  });
+
+  const port = argv.p || argv.port || 3000;
+
+  server.listen(port, () => {
+    console.log(`Running at http://localhost:${port}`);
+
     if (argv.w || argv.watch) watch();
   });
 }
 
 function watch() {
+  const { cwd, contentPath, templatesPath, assetsPath } = statiq.config();
+
   watcher([
-    statiq._path('content'),
-    statiq._path('templates'),
-    statiq._path('assets')
+    path.join(cwd, contentPath),
+    path.join(cwd, templatesPath),
+    path.join(cwd, assetsPath),
   ], { recursive: true }, build);
+
   console.log('Waiting for changes...');
 }
 
