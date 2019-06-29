@@ -1,15 +1,8 @@
-const ejs = require('ejs');
-const marked = require('marked');
+const { blocksPlugin, markedPlugin, ejsPlugin } = require('statiq/plugins');
 
 module.exports = function(statiq) {
   statiq.config({
-
-    paths: {
-      templates: 'templates',
-      content: 'content',
-      publish: 'public',
-      assets: 'assets'
-    },
+    publishPath: 'public',
 
     context: {
       sitename: 'Statiq',
@@ -20,15 +13,10 @@ module.exports = function(statiq) {
 
     cwd: __dirname + '/examples',
 
-    contentParser: marked,
-
-    templateParser: function(template, document) {
-      return ejs.render(template, Object.assign({}, document.context, {
-        content: document.content,
-      }), {
-        filename: document.templatePath,
-      });
-    },
-
+    plugins: [
+      blocksPlugin(),
+      markedPlugin(),
+      ejsPlugin(),
+    ],
   });
 };
