@@ -12,11 +12,11 @@ A node.js static website generator
   * [Directory context](#directory-context)
   * [Global context](#global-context)
   * [Directory indexes](#directory-indexes)
+* [Command line tool](#command-line-tool)
+* [Programmatic API](#programmatic-api)
 * [Plugins](#plugins)
   * [Plugins API](#plugins-api)
   * [Included plugins](#included-plugins)
-* [Command line tool](#command-line-tool)
-* [Programmatic API](#programmatic-api)
 
 ## Install
 
@@ -141,6 +141,141 @@ Each `index[folder]` item is set to the context of that file plus a special `pat
 #### Hidden documents
 
 Files prefixed with `_` will be processed but they won't be included in the index.
+
+## Command line tool
+
+    $ statiq
+Look for nearest statiqfile.js and build website
+
+    $ statiq init
+Create a new statiqfile and default folder structure
+
+    $ statiq init -s
+Create a new statiqfile only
+
+    $ statiq add <filename>
+Create a new website document/page/post
+
+    $ statiq add <filename> --<key>=<value> --<key>=<value>...
+Create a new document and set local context values
+
+    $ statiq serve
+Start a local server
+
+    $ statiq watch
+Start a file watcher and rebuild website when changes occur
+
+    $ statiq serve -w
+Start server and watcher
+
+    $ statiq help
+Show help
+
+## Programmatic API
+
+    const statiq = require('statiq');
+    const site = statiq();
+
+    site.config({
+      ...
+    });
+    
+    site.run();
+
+### Methods
+
+#### site.config(object config)
+
+Sets site configuration just like a statiqfile. Default configuration is:
+
+    {
+      contentPath: 'content',
+      templatesPath: 'templates',
+      publishPath: 'publish',
+      assetsPath: 'assets',
+      defaultTemplate: 'index.html',
+      contentExtension: '.md',
+      publishExtension: '.html',
+      hiddenRegex: /^_/, // filenames that shouldn't be included in indexes
+      plugins: [],
+      context: {}, // global context
+      cwd: process.cwd(), // if site is built using the cli tool, it's set to the statiqfile.js dir by default
+    }
+
+Returns the config object.
+
+#### site.use(fn plugin)
+
+Adds a statiq plugin.
+Returns void.
+
+#### site.create(string file, object context, string content?)
+
+Creates a document `file` with local `context` and `content`.
+Returns a promise containing the document object.
+
+Hooks: beforeCreate, afterCreate
+
+#### site.read(string file)
+
+Reads and cache a file in the content folder.
+Returns a promise containing the document object.
+
+Hooks: beforeRead, afterRead
+
+#### site.update(string file, object context, string content)
+
+Updates the `context` and `content` of a cached document `file`.
+Returns a promise containing the document object.
+
+Hooks: beforeUpdate, afterUpdate
+
+#### site.build(string file)
+
+Builds the cached document `file`. It'll use other cached documents and contexts to generate indexes.
+Returns a promise containing the built document object.
+
+Hooks: beforeBuild, afterBuild
+
+#### site.buildAll()
+
+Convenience method to build all the cached documents.
+
+#### site.write(string file)
+
+Writes the cached built document `file` to the filesystem.
+Returns a promise containing the file path.
+
+Hooks: beforeWrite, afterWrite
+
+#### site.writeAll()
+
+Convenience method to write all the cached built documents.
+
+#### site.delete(string file)
+
+Deletes the document `file` from the cache and the filesystem.
+Returns a promise containing void.
+
+#### site.scan(string path?)
+
+Deep-scans the content directory and reads its documents. Specify a `path` if you don't want to start from the content root.
+Returns a promise containing an array of read documents.
+
+#### site.handleAssets()
+
+Process the assets folder. By default, it'll just copy all files to the publish folder.
+
+Hooks: beforeAsset, afterAsset
+
+#### site.list()
+
+Returns all the cached documents
+
+#### site.run()
+
+Convenience method to run scan(), buildAll() and writeAll().
+Returns a promise containing an array of generated paths.
 
 ## Plugins
 
@@ -307,138 +442,3 @@ Instead of using the `content` variable, you can define block sections just like
 These are [Heredoc](http://en.wikipedia.org/wiki/Here_document)-ish declaration.
 Blocks start with `<<BLOCK_NAME` and end with `BLOCK_NAME;` (both in their own lines).
 Block names are case-sensitive alphanumeric strings. Their content is removed from the `content` variable.
-
-## Command line tool
-
-    $ statiq
-Look for nearest statiqfile.js and build website
-
-    $ statiq init
-Create a new statiqfile and default folder structure
-
-    $ statiq init -s
-Create a new statiqfile only
-
-    $ statiq add <filename>
-Create a new website document/page/post
-
-    $ statiq add <filename> --<key>=<value> --<key>=<value>...
-Create a new document and set local context values
-
-    $ statiq serve
-Start a local server
-
-    $ statiq watch
-Start a file watcher and rebuild website when changes occur
-
-    $ statiq serve -w
-Start server and watcher
-
-    $ statiq help
-Show help
-
-## Programmatic API
-
-    const statiq = require('statiq');
-    const site = statiq();
-
-    site.config({
-      ...
-    });
-    
-    site.run();
-
-### Methods
-
-#### site.config(object config)
-
-Sets site configuration just like a statiqfile. Default configuration is:
-
-    {
-      contentPath: 'content',
-      templatesPath: 'templates',
-      publishPath: 'publish',
-      assetsPath: 'assets',
-      defaultTemplate: 'index.html',
-      contentExtension: '.md',
-      publishExtension: '.html',
-      hiddenRegex: /^_/, // filenames that shouldn't be included in indexes
-      plugins: [],
-      context: {}, // global context
-      cwd: process.cwd(), // if site is built using the cli tool, it's set to the statiqfile.js dir by default
-    }
-
-Returns the config object.
-
-#### site.use(fn plugin)
-
-Adds a statiq plugin.
-Returns void.
-
-#### site.create(string file, object context, string content?)
-
-Creates a document `file` with local `context` and `content`.
-Returns a promise containing the document object.
-
-Hooks: beforeCreate, afterCreate
-
-#### site.read(string file)
-
-Reads and cache a file in the content folder.
-Returns a promise containing the document object.
-
-Hooks: beforeRead, afterRead
-
-#### site.update(string file, object context, string content)
-
-Updates the `context` and `content` of a cached document `file`.
-Returns a promise containing the document object.
-
-Hooks: beforeUpdate, afterUpdate
-
-#### site.build(string file)
-
-Builds the cached document `file`. It'll use other cached documents and contexts to generate indexes.
-Returns a promise containing the built document object.
-
-Hooks: beforeBuild, afterBuild
-
-#### site.buildAll()
-
-Convenience method to build all the cached documents.
-
-#### site.write(string file)
-
-Writes the cached built document `file` to the filesystem.
-Returns a promise containing the file path.
-
-Hooks: beforeWrite, afterWrite
-
-#### site.writeAll()
-
-Convenience method to write all the cached built documents.
-
-#### site.delete(string file)
-
-Deletes the document `file` from the cache and the filesystem.
-Returns a promise containing void.
-
-#### site.scan(string path?)
-
-Deep-scans the content directory and reads its documents. Specify a `path` if you don't want to start from the content root.
-Returns a promise containing an array of read documents.
-
-#### site.handleAssets()
-
-Process the assets folder. By default, it'll just copy all files to the publish folder.
-
-Hooks: beforeAsset, afterAsset
-
-#### list
-
-Returns all the cached documents
-
-#### run
-
-Convenience method to run scan(), buildAll() and writeAll().
-Returns a promise containing an array of generated paths.
