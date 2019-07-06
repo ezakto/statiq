@@ -4,6 +4,7 @@
   "description": "A static website generator",
   "author": "Nicolás Arias <nicolas@nicolasarias.com>",
   "preferGlobal": true,
+  "license": "MIT",
   "keywords": [
     "simple",
     "static",
