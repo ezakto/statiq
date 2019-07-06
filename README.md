@@ -3,24 +3,47 @@ statiq
 
 A node.js static website generator
 
-Statiq reads a folder structure of source files and generates web-ready files.
+* [Install](#install)
+* [Basic usage](#basic-usage)
+  * [Content](#content)
+  * [Templates](#templates)
+  * [Building](#building)
+* [Advanced](#advanced)
+  * [Directory context](#directory-context)
+  * [Global context](#global-context)
+  * [Directory indexes](#directory-indexes)
+* [Plugins](#plugins)
+  * [Plugins API](#plugins-api)
+  * [Included plugins](#included-plugins)
+* [Command line tool](#command-line-tool)
+* [Programmatic API](#programmatic-api)
 
-### Install:
+## Install
 
     npm install -g statiq
 
-### Basic usage:
+## Basic usage:
 
 Create a statiq website with the cli tool:
 
     $ statiq init
 
-This will create a folder structure. Then run `$ npm install` to install default dependencies (`ejs` for templates and `marked` for markdown content) and you're ready to go.
-Source documents go to the content folder and templates in the templates folder. The resulting website will go to the publish folder. The assets folder is copied into the publish folder as is. Build your website structure in the content folder, with markdown-formatted pages. For example:
+This will create a folder structure and a `statiqfile.js` in the current directory. Then run `$ npm install` to install default dependencies (`ejs` for templates, `marked` for markdown content, and `moment`) and you're ready to go.
+You'll have 4 directories: `content`, `templates`, `assets` and `publish`. By default, files in the `assets` folder will be copied as-is to the `publish` folder. Documents in the `content` folder will be merged into their corresponding templates from the `templates` folder and saved to the `publish` folder (mirroring content folder structure). For example, this structure:
 
     content/index.md
     content/about.md
     content/docs/index.md
+
+Will result in:
+
+    publish/index.html
+    publish/about.html
+    publish/docs/index.html
+
+### Content
+
+By default content is placed in markdown documents.
 
 Sample index.md:
 
@@ -29,35 +52,9 @@ Sample index.md:
     
     This is a *test page*.
 
-Then make an index.html file in your templates folder.
+#### File variables
 
-    <!doctype html>
-    <html>
-    <head>
-        <meta charset="UTF-8">
-        <title>Test Page</title>
-    </head>
-    <body>
-        <div id="main">
-            <%- content %>
-        </div>
-    </body>
-    </html>
-
-The `content` variable contains the parsed html.
-Finally, run:
-
-    $ statiq
-
-You'll get all the parsed pages in your publish folder:
-
-    publish/index.html
-    publish/about.html
-    publish/docs/index.html
-
-### Local variables
-
-You can set context variables for each source file, by placing a yaml/json object in its first lines:
+You can set *context variables* in each file, by placing a yaml/json object in its first lines, followed by a triple dash (`---`):
 
     title: Index page
     ---
@@ -66,74 +63,43 @@ You can set context variables for each source file, by placing a yaml/json objec
     ========
     ...
 
-*Notice the required triple dash (`---`)*
+### Templates
 
-Then your template could look like:
-
-    <!doctype html>
-    <html>
-    <head>
-        <meta charset="UTF-8">
-        <title><%= title %></title>
-    </head>
-    <body>
-    ...
-
-### Blocks
-
-Consider a multicolumn layout like this:
+Default templating engine is ejs. An index.html template file could look like this:
 
     <!doctype html>
     <html>
     <head>
         <meta charset="UTF-8">
-        <title><%= title %></title>
+        <title><%- title %></title>
     </head>
     <body>
         <div id="main">
-            <div class="left-column">
-                <%- left %>
-            </div>
-            <div class="right-column">
-                <%- right %>
-            </div>
+            <%- content %>
         </div>
-        <div id="footer">Copyright &copy; <%= year %></div>
     </body>
     </html>
 
-Instead of using the `content` variable, you can define block sections just like this:
+Context variables are available, and the `content` variable contains the document itself.
 
-    title: Multi column
-    year: 2013
-    ---
-    
-    <<left
-    Welcome!
-    ========
-    
-    Lorem ipsum dolor sit amet blah blah.
-    left;
-    
-    <<right
-    ### Useful links
-    [Google](http://www.google.com/)
-    [Wikipedia](http://www.wikipedia.org/)
-    right;
+### Building
 
-This is a [Heredoc](http://en.wikipedia.org/wiki/Here_document)-ish declaration.
-By default, blocks start in a newline, with `<<BLOCK_NAME` and another newline.
-Then, you close the block with `BLOCK_NAME;`.
-Block names are case-sensitive alphanumeric strings.
+Finally, run:
+
+    $ statiq
+
+And you're ready to go!
+
+## Advanced
 
 ### Directory context
 
-If files in a same folder share some metadata, you can put it in context files within the folder. For example, add a `context.json` or `context.yaml` file in the `content/docs/` folder, like this:
+If files in a same folder share some metadata, you can put it in context files within the folder. For example, add a `context.json` or `context.yaml` file in a `content/docs/` folder, like this:
 
     subtitle: My documents
     somedata: ...
 
-Now, all your files under `content/docs/` (including sub-directories) will share those variables (unless they are overwritten by a deeper level context or in-file context).
+Now, every document under `content/docs/` (including sub-directories) will have those variables set at build time, unless they are overwritten by a deeper level context or in-file context.
 
 ### Global context
 
@@ -147,11 +113,11 @@ Use the `context` property in the configuration object within the `statiqfile.js
       }
     })
 
-This works just like putting a `context.yaml` file in `content/`. However, by using the statiqfile, you may pass functions aswell (like moment.js, sorting methods, etc).
+This works just like putting a context file in the `content/` root. However, by using the statiqfile, you may perform any data processing/manipulation and pass the result, or even pass functions (like moment.js, sorting methods, etc).
 
 ### Directory indexes
 
-You can iterate files in a given folder with the special `index[folder]` variables.
+In templates, you can iterate through files in a given folder using the special `index[folder]` variables.
 Given this structure:
 
     content/index.md
@@ -170,9 +136,177 @@ You can list the articles folder in your templates accesing `index['articles']`,
     <% }) %>
     </ul>
 
-Each `index[folder]` item is set to the context of that file plus `path` (that points to the item file relatively from the current file) and `current` (which is true when the item is the same file accessing it). This is great for navigable indexes.
+Each `index[folder]` item is set to the context of that file plus a special `path` variable containing the relative path from the current file and a `current` variable which is `true` when the item is the same file accessing it.
+
+#### Hidden documents
 
 Files prefixed with `_` will be processed but they won't be included in the index.
+
+## Plugins
+
+Plugins can be loaded using the `plugins` array in the site configuration:
+
+    statiq.config({
+        context: { ... }
+        plugins: [myPlugin(), ejsPlugin(), markedPlugin()]
+    });
+
+Or alternatively, loaded later using `.use()`:
+
+    statiq.use(myPlugin());
+
+A statiq plugin consists of a function that returns an object with a set of hook properties that will exec in a given step of the build process.
+
+    function myPlugin(options) {
+        return {
+            beforeBuild(document) {
+                document.title = "Foo";
+                return document;
+            },
+        }
+    }
+
+These hooks are executed in the same order the plugins were loaded.
+When an `before*` hook returns a falsy value, it prevents its `after*` execution and also any other `before*` in the chain.
+
+### Plugins API
+
+#### beforeCreate(object document)
+Runs before a new document is written into the file system.
+The document object contains contentPath, context, content and source.
+Must return the document object (modified or not), a new document object, or falsy to cancel the document creation.
+
+#### afterCreate(object document)
+Runs after a new document has been written to the file system, and can be used to perform any side effects. Returns void.
+
+#### beforeRead(object document)
+Runs before a content file is read and cached.
+The document object contains contentPath, publishPath, and context (including global context).
+Must return the document object (modified or not), a new document object, or falsy to skip reading the document.
+
+#### afterRead(object document)
+Runs after a document has been read and cached, and can be used to perform any side effects. Returns void.
+
+#### beforeUpdate(object document, object newContext, string newContent)
+Runs before an update is made to a cached document.
+To access the current context or content of the document, you can use `document.context` and `document.content`.
+Must return the document object (modified or not), a new document object, or falsy to skip updating the document.
+
+#### afterUpdate(object document)
+Runs after a document has been updated in cache, and can be used to perform any side effects. Returns void.
+
+#### beforeBuild(object document, string template)
+Runs before a document is built in memory. 
+Must return the document object (modified or not), a new document object, or falsy to skip building the document.
+
+#### afterBuild(object document)
+Runs after a document has been built in cache, and can be used to perform any side effects. Returns void.
+
+#### beforeWrite(object document)
+Runs before a cached document is written to the file system.
+Must return the document object (modified or not), a new document object, or falsy to skip writting the file.
+
+#### afterWrite(object document)
+Runs after a file has been written to the file system, and can be used to perform any side effects. Returns void.
+
+#### beforeAsset(object assetDocument)
+Runs when an asset file is found in the assets directory. `assetDocument` is an object containing `assetPath` and `publishPath`.
+Must return the asset object (modified or not), a new object or falsy to skip processing this asset.
+
+#### afterAsset(object assetDocument)
+Runs after an asset has been processed, and can be used to perform any side effects.
+Returns void.
+
+### Included plugins
+
+These plugins are shipped with static and can be imported from `statiq/plugins`.
+
+#### markedPlugin
+
+Lets you write documents content in markdown. Requires `marked`.
+
+##### Usage
+
+    const { markedPlugin } = require('statiq/plugins');
+
+    statiq.use(markedPlugin(options))
+
+###### Options
+
+`parseMultilineContext` (boolean) Process context variables containing a multiline string. Defaults to `true`.
+
+#### ejsPlugin
+
+Lets you write templates using ejs. Requires `ejs`.
+
+##### Usage
+
+    const { ejsPlugin } = require('statiq/plugins');
+
+    statiq.use(ejsPlugin())
+
+#### lessPlugin
+
+Converts `.less` files in the assets folder into `.css` files at build time. Requires `less`.
+
+##### Usage
+
+    const { lessPlugin } = require('statiq/plugins');
+
+    statiq.use(lessPlugin(options))
+
+###### Options
+
+`main` (string) Optional. Copy only this filename to the publish folder.
+
+The options object is passed as options to less' render method.
+
+#### blocksPlugin
+
+Lets you define content blocks in documents. Consider a multicolumn layout like this:
+
+    <!doctype html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title><%= title %></title>
+    </head>
+    <body>
+        <div class="left-column">
+            <%- left %>
+        </div>
+        <div class="main">
+            <%- content %>
+        </div>
+        <div class="right-column">
+            <%- right %>
+        </div>
+    </body>
+    </html>
+
+Instead of using the `content` variable, you can define block sections just like this:
+
+    title: Multi column
+    ---
+    
+    <<left
+    Welcome!
+    ========
+    
+    Lorem ipsum dolor sit amet blah blah.
+    left;
+    
+    <<right
+    ### Useful links
+    [Google](http://www.google.com/)
+    [Wikipedia](http://www.wikipedia.org/)
+    right;
+
+    This is the main content.
+
+These are [Heredoc](http://en.wikipedia.org/wiki/Here_document)-ish declaration.
+Blocks start with `<<BLOCK_NAME` and end with `BLOCK_NAME;` (both in their own lines).
+Block names are case-sensitive alphanumeric strings. Their content is removed from the `content` variable.
 
 ## Command line tool
 
@@ -206,112 +340,105 @@ Show help
 ## Programmatic API
 
     const statiq = require('statiq');
+    const site = statiq();
+
+    site.config({
+      ...
+    });
     
-    statiq
-      .config({
-        ...
-      })
-      .run();
+    site.run();
 
 ### Methods
 
-#### statiq.config(object config)
+#### site.config(object config)
 
 Sets site configuration just like a statiqfile. Default configuration is:
 
     {
-      paths: {
-        content: 'content',
-        templates: 'templates',
-        publish: 'publish',
-        assets: 'assets',
-      },
+      contentPath: 'content',
+      templatesPath: 'templates',
+      publishPath: 'publish',
+      assetsPath: 'assets',
       defaultTemplate: 'index.html',
       contentExtension: '.md',
       publishExtension: '.html',
       hiddenRegex: /^_/, // filenames that shouldn't be included in indexes
-      contentParser: identity, // returns content as is
-      templateParser: simpleParser, // replaces {{key}} with value
-      contextHandler: identity, // doesn't transform contexts
-      indexHandler: identity, // doesn't transform indexes
-      assetHandler: syncCopy, // just copy assets
+      plugins: [],
       context: {}, // global context
-      cwd: null, // it's statiqfile.js dir, should be set when using the programmatic api
+      cwd: process.cwd(), // if site is built using the cli tool, it's set to the statiqfile.js dir by default
     }
 
-Returns statiq.
+Returns the config object.
 
-#### statiq.use(fn plugin)
+#### site.use(fn plugin)
 
 Adds a statiq plugin.
 Returns void.
 
-#### statiq.create(string file, object context, string content?)
+#### site.create(string file, object context, string content?)
 
 Creates a document `file` with local `context` and `content`.
-Returns a promise that resolves to the absolute path to the file.
+Returns a promise containing the document object.
 
-#### statiq.read(string file)
+Hooks: beforeCreate, afterCreate
 
-Reads a file path and builds a document object.
-Returns a promise that resolves to:
+#### site.read(string file)
 
-    {
-      documentPath,
-      sourcePath,
-      publishPath,
-      templatePath,
-      rawContext,
-      rawContent,
-      context,
-      content,
-    }
+Reads and cache a file in the content folder.
+Returns a promise containing the document object.
 
-#### statiq.update(string file, object context, string content)
+Hooks: beforeRead, afterRead
 
-Updates the `context` and `content` of an existing `file`.
-Returns a promise that resolves to the absolute path to the file.
+#### site.update(string file, object context, string content)
 
-#### statiq.delete(string file)
+Updates the `context` and `content` of a cached document `file`.
+Returns a promise containing the document object.
 
-Deletes an existing `file`.
-Returns a promise that resolves to void.
+Hooks: beforeUpdate, afterUpdate
 
-#### statiq.loadContext(string dir)
+#### site.build(string file)
 
-Tries to load and parse a context file in the given directory.
-Returns a promise that resolves to a context object or undefined if not found.
+Builds the cached document `file`. It'll use other cached documents and contexts to generate indexes.
+Returns a promise containing the built document object.
 
-#### statiq.scan(string dir?)
+Hooks: beforeBuild, afterBuild
 
-Deep-scans a directory, reads its documents and caches the resulting document objects. If no directory is provided, it'll scan the default content directory.
-Returns a promise that resolves to the cached documents in the form `{ [file]: [document object]... }`.
+#### site.buildAll()
 
-#### statiq.clear()
+Convenience method to build all the cached documents.
 
-Clears the cached documents and contexts.
+#### site.write(string file)
 
-#### statiq.build(string file)
+Writes the cached built document `file` to the filesystem.
+Returns a promise containing the file path.
 
-Builds a single file. It'll use cached documents and contexts to generate indexes.
-Returns a promise that resolves to the absolute path to the generated file.
+Hooks: beforeWrite, afterWrite
 
-#### statiq.buildAll()
+#### site.writeAll()
 
-Builds all files in cache.
-Returns a promise that resolves to an array of absolute paths to the generated files.
+Convenience method to write all the cached built documents.
 
-#### statiq.copyAsset(string file)
+#### site.delete(string file)
 
-Copies a file from the assets folder to the publish folder.
-Returns a promise that resolves to the absolute path to the new file.
+Deletes the document `file` from the cache and the filesystem.
+Returns a promise containing void.
 
-#### statiq.copy(string dir?)
+#### site.scan(string path?)
 
-Deep copies the file contents of the given directory to the publish folder. If no directory is provided, it'll scan the default assets directory.
-Returns a promise that resolves to void.
+Deep-scans the content directory and reads its documents. Specify a `path` if you don't want to start from the content root.
+Returns a promise containing an array of read documents.
+
+#### site.handleAssets()
+
+Process the assets folder. By default, it'll just copy all files to the publish folder.
+
+Hooks: beforeAsset, afterAsset
+
+#### list
+
+Returns all the cached documents
 
 #### run
 
-Convenience method that clears cache, copies all assets, scans all documents and build them.
-Returns a promise that resolves to an array of absolute paths to the generated files.
+Convenience method to run scan(), buildAll() and writeAll().
+Returns a promise containing an array of generated paths.
