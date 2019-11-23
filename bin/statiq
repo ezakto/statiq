@@ -1,30 +1,23 @@
 #!/usr/bin/env node
-
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
-const util = require('util');
 const argv = require('minimist')(process.argv.slice(2));
-const mkdirp = require('mkdirp-promise');
 const serveHandler = require('serve-handler');
-const statiq = require('../lib/statiq')();
 const watcher = require('node-watch');
+const statiq = require('../lib/statiq')();
+const init = require('../lib/init');
 
-const readFile = util.promisify(fs.readFile);
-const writeFile = util.promisify(fs.writeFile);
-
+const { log, warn, error } = console;
 let cwd = process.cwd();
 
 function help() {
-  console.info(
-`Statiq - static website generator.
+  log(`Statiq - static website generator.
 
 Usage:
   statiq                  build website
 
   statiq init [options]   bootstrap website
-    Options:
-      -s                  create statiqfile only
 
   statiq add <filename>   create website document, key-value pairs
     [--<key>=<value>...]  are added to document context
@@ -37,8 +30,7 @@ Usage:
   statiq watch            start watcher and rebuild website when
                           changes occur
 
-  statiq help             show this because`
-  );
+  statiq help             show this because`);
 }
 
 function lookup() {
@@ -56,43 +48,7 @@ function lookup() {
   }
 
   if (cwd === '/') {
-    console.warn('No statiqfile.js found');
-    return;
-  }
-}
-
-async function init() {
-  if (argv.s) {
-    await Promise.all([
-      mkdirp(path.join(process.cwd(), 'content')).then(() => {
-        console.info('\u2713 created content/');
-      }),
-      mkdirp(path.join(process.cwd(), 'templates')).then(() => {
-        console.info('\u2713 created templates/');
-      }),
-      mkdirp(path.join(process.cwd(), 'publish')).then(() => {
-        console.info('\u2713 created publish/');
-      }),
-      mkdirp(path.join(process.cwd(), 'assets')).then(() => {
-        console.info('\u2713 created assets/');
-      }),
-    ]);
-
-    const pkg = await readFile(path.join(__dirname, '..', 'lib', 'package.json'));
-    await writeFile(path.join(process.cwd(), 'package.json'), pkg);
-
-    console.info('\u2713 created package.json');
-  }
-
-  const statiqfile = await readFile(path.join(__dirname, '..', 'lib', 'statiqfile.js'));
-  await writeFile(path.join(process.cwd(), 'statiqfile.js'), statiqfile);
-
-  console.info('\u2713 created statiqfile.js');
-
-  if (!argv.s) {
-    console.info('');
-    console.info('  install dependencies:');
-    console.info('    $ npm install');
+    warn('No statiqfile.js found');
   }
 }
 
@@ -105,25 +61,25 @@ function add() {
 
   statiq
     .create(filepath, Object.keys(argv).length ? argv : null, '')
-    .then(() => console.info('\u2713', filepath, 'created'))
-    .catch(err => console.warn('\u2717', err.toString()));
+    .then(() => log('\u2713', filepath, 'created'))
+    .catch(err => warn('\u2717', err.toString()));
 }
 
 async function build() {
   const time = Date.now();
-  console.log();
+  log();
 
   try {
     await statiq.scan();
     await statiq.buildAll();
-    (await statiq.writeAll()).map(path => argv.s || console.info('\u2713 ' + path));
-    await statiq.handleAssets()
-    console.info('\u2713 Assets copied');
+    (await statiq.writeAll()).map(p => argv.s || log(`\u2713 ${p}`));
+    await statiq.handleAssets();
+    log('\u2713 Assets copied');
   } catch (err) {
-    console.error('\u2717 ' + err.toString());
+    error(`\u2717 ${err.toString()}`);
   }
 
-  console.info('\nFinished in', Date.now() - time, 'ms');
+  log('\nFinished in', Date.now() - time, 'ms');
 }
 
 function serve() {
@@ -138,7 +94,7 @@ function serve() {
   const port = argv.p || argv.port || 3000;
 
   server.listen(port, () => {
-    console.log(`Running at http://localhost:${port}`);
+    log(`Running at http://localhost:${port}`);
 
     if (argv.w || argv.watch) watch();
   });
@@ -153,7 +109,7 @@ function watch() {
     path.join(cwd, assetsPath),
   ], { recursive: true }, build);
 
-  console.log('Waiting for changes...');
+  log('Waiting for changes...');
 }
 
 // No args, lookup for statiqfile and parse
@@ -161,26 +117,27 @@ if (!argv._.length) {
   lookup();
   build();
 // Else check commands
-} else switch(argv._[0]) {
-  case 'help':
-    return help();
+} else {
+  switch (argv._[0]) {
+    case 'help':
+      return help();
 
-  case 'init':
-    if (argv.d) lookup();
-    return init();
+    case 'init':
+      return init();
 
-  case 'add':
-    lookup();
-    return add();
+    case 'add':
+      lookup();
+      return add();
 
-  case 'serve':
-    lookup();
-    return serve();
+    case 'serve':
+      lookup();
+      return serve();
 
-  case 'watch':
-    lookup();
-    return watch();
+    case 'watch':
+      lookup();
+      return watch();
 
-  default:
-    return console.log('Unknown command', argv._[0]);
+    default:
+      return log('Unknown command', argv._[0]);
+  }
 }

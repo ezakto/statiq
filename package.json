@@ -21,6 +21,8 @@
     "url": "git://github.com/ezakto/statiq.git"
   },
   "dependencies": {
+    "ansi-colors": "^4.1.1",
+    "inquirer": "^7.0.0",
     "js-yaml": "^3.13.1",
     "minimist": "^1.2.0",
     "mkdirp-promise": "^5.0.1",
@@ -30,6 +32,6 @@
   },
   "devDependencies": {
     "ejs": "^2.6.2",
-    "marked": "^0.6.2"
+    "marked": "^0.7.0"
   }
 }
