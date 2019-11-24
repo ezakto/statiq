@@ -20,16 +20,18 @@ A node.js static website generator
 
 ## Install
 
-    npm install -g statiq
+    $ npm install -g statiq
 
 ## Basic usage:
 
-Create a statiq website with the cli tool:
+Create a statiq website with the interactive cli tool:
 
     $ statiq init
 
-This will create a folder structure and a `statiqfile.js` in the current directory. Then run `$ npm install` to install default dependencies (`ejs` for templates, `marked` for markdown content, and `moment`) and you're ready to go.
-You'll have 4 directories: `content`, `templates`, `assets` and `publish`. By default, files in the `assets` folder will be copied as-is to the `publish` folder. Documents in the `content` folder will be merged into their corresponding templates from the `templates` folder and saved to the `publish` folder (mirroring content folder structure). For example, this structure:
+![statiqinit](https://user-images.githubusercontent.com/778104/69487186-67c0d380-0e34-11ea-80d9-e13607c7b056.gif)
+
+This will bootstrap the folder structure, `statiqfile.js` and `package.json` in the current directory.
+There are four directories: `content`, `templates`, `assets` and `publish`. By default, files in the `assets` folder will be copied as-is to the `publish` folder. Documents in the `content` folder will be merged into their corresponding templates from the `templates` folder and saved to the `publish` folder (mirroring content folder structure). For example, this structure:
 
     content/index.md
     content/about.md
@@ -43,7 +45,7 @@ Will result in:
 
 ### Content
 
-By default content is placed in markdown documents.
+By default, content is placed in `.html` files. If you added the `markedPlugin`, content is placed in markdown `.md` documents.
 
 Sample index.md:
 
@@ -80,7 +82,7 @@ Default templating engine is ejs. An index.html template file could look like th
     </body>
     </html>
 
-Context variables are available, and the `content` variable contains the document itself.
+Context variables are available, and the special `content` variable contains the document itself.
 
 ### Building
 
@@ -354,7 +356,7 @@ Returns void.
 
 ### Included plugins
 
-These plugins are shipped with static and can be imported from `statiq/plugins`.
+These plugins are shipped with statiq and can be imported from `statiq/plugins`.
 
 #### markedPlugin
 
