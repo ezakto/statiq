@@ -16,7 +16,7 @@ function help() {
 Usage:
   statiq                  build website
 
-  statiq init [options]   bootstrap website
+  statiq init             bootstrap website
 
   statiq add <filename>   create website document, key-value pairs
     [--<key>=<value>...]  are added to document context
@@ -60,6 +60,8 @@ function add() {
 
   delete argv._;
 
+  lookup();
+
   statiq
     .create(filepath, Object.keys(argv).length ? argv : null, '')
     .then(() => log('\u2713', filepath, 'created'))
@@ -71,6 +73,8 @@ async function build() {
   log();
 
   try {
+    lookup();
+
     await statiq.readAll();
     await statiq.buildAll();
     (await statiq.writeAll()).map(p => argv.s || log(`\u2713 ${p}`));
@@ -84,21 +88,22 @@ async function build() {
 }
 
 function watch() {
+  lookup();
+
   const { cwd, contentPath, templatesPath, assetsPath } = statiq.config();
 
   watcher([
     path.join(cwd, contentPath),
     path.join(cwd, templatesPath),
     path.join(cwd, assetsPath),
-  ], { recursive: true }, () => {
-    lookup();
-    build();
-  });
+  ], { recursive: true }, build);
 
   log('Waiting for changes...');
 }
 
 function serve() {
+  lookup();
+
   const server = http.createServer((req, res) => {
     const { cwd, publishPath } = statiq.config();
 
@@ -118,7 +123,6 @@ function serve() {
 
 // No args, lookup for statiqfile and parse
 if (!argv._.length) {
-  lookup();
   return build();
 }
 
@@ -131,15 +135,12 @@ switch (argv._[0]) {
     return init();
 
   case 'add':
-    lookup();
     return add();
 
   case 'serve':
-    lookup();
     return serve();
 
   case 'watch':
-    lookup();
     return watch();
 
   default:
