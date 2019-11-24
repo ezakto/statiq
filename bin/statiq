@@ -107,7 +107,10 @@ function watch() {
     path.join(cwd, contentPath),
     path.join(cwd, templatesPath),
     path.join(cwd, assetsPath),
-  ], { recursive: true }, build);
+  ], { recursive: true }, () => {
+    lookup();
+    build();
+  });
 
   log('Waiting for changes...');
 }
