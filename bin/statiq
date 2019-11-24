@@ -70,7 +70,7 @@ async function build() {
   log();
 
   try {
-    await statiq.scan();
+    await statiq.readAll();
     await statiq.buildAll();
     (await statiq.writeAll()).map(p => argv.s || log(`\u2713 ${p}`));
     await statiq.handleAssets();
