@@ -3,6 +3,6 @@
 .npmignore
 .gitignore
 
-statiq.json
-
+statiqfile.js
+examples/
 test/
