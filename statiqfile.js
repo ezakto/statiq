@@ -10,6 +10,7 @@ module.exports = function(statiq) {
     },
 
     defaultTemplate: 'index.html',
+    contentExtension: '.md',
 
     cwd: __dirname + '/examples',
 
