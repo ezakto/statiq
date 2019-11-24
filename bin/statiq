@@ -9,7 +9,6 @@ const statiq = require('../lib/statiq')();
 const init = require('../lib/init');
 
 const { log, warn, error } = console;
-let cwd = process.cwd();
 
 function help() {
   log(`Statiq - static website generator.
@@ -34,12 +33,14 @@ Usage:
 }
 
 function lookup() {
-  // statiqfile lookup
+  let cwd = process.cwd();
+
   while (cwd !== '/') {
     const filepath = path.join(cwd, 'statiqfile.js');
 
     if (fs.existsSync(filepath)) {
       statiq.config({ cwd });
+      // eslint-disable-next-line global-require, import/no-dynamic-require
       require(filepath)(statiq);
       break;
     } else {
@@ -82,6 +83,21 @@ async function build() {
   log('\nFinished in', Date.now() - time, 'ms');
 }
 
+function watch() {
+  const { cwd, contentPath, templatesPath, assetsPath } = statiq.config();
+
+  watcher([
+    path.join(cwd, contentPath),
+    path.join(cwd, templatesPath),
+    path.join(cwd, assetsPath),
+  ], { recursive: true }, () => {
+    lookup();
+    build();
+  });
+
+  log('Waiting for changes...');
+}
+
 function serve() {
   const server = http.createServer((req, res) => {
     const { cwd, publishPath } = statiq.config();
@@ -100,47 +116,32 @@ function serve() {
   });
 }
 
-function watch() {
-  const { cwd, contentPath, templatesPath, assetsPath } = statiq.config();
-
-  watcher([
-    path.join(cwd, contentPath),
-    path.join(cwd, templatesPath),
-    path.join(cwd, assetsPath),
-  ], { recursive: true }, () => {
-    lookup();
-    build();
-  });
-
-  log('Waiting for changes...');
-}
-
 // No args, lookup for statiqfile and parse
 if (!argv._.length) {
   lookup();
-  build();
-// Else check commands
-} else {
-  switch (argv._[0]) {
-    case 'help':
-      return help();
+  return build();
+}
 
-    case 'init':
-      return init();
+// Or check commands
+switch (argv._[0]) {
+  case 'help':
+    return help();
 
-    case 'add':
-      lookup();
-      return add();
+  case 'init':
+    return init();
 
-    case 'serve':
-      lookup();
-      return serve();
+  case 'add':
+    lookup();
+    return add();
 
-    case 'watch':
-      lookup();
-      return watch();
+  case 'serve':
+    lookup();
+    return serve();
 
-    default:
-      return log('Unknown command', argv._[0]);
-  }
+  case 'watch':
+    lookup();
+    return watch();
+
+  default:
+    return log('Unknown command', argv._[0]);
 }
