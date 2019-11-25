@@ -65,7 +65,7 @@ function add() {
   statiq
     .create(filepath, Object.keys(argv).length ? argv : null, '')
     .then(() => log('\u2713', filepath, 'created'))
-    .catch(err => warn('\u2717', err.toString()));
+    .catch(err => error('\u2717', err));
 }
 
 async function build() {
@@ -81,7 +81,7 @@ async function build() {
     await statiq.handleAssets();
     log('\u2713 Assets copied');
   } catch (err) {
-    error(`\u2717 ${err.toString()}`);
+    error('\u2717', err);
   }
 
   log('\nFinished in', Date.now() - time, 'ms');
